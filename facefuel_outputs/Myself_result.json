@@ -1,0 +1,220 @@
+{
+  "status": "success",
+  "features_detected": {
+    "dark_circle": {
+      "severity": 1.0,
+      "level": "high",
+      "confidence": 0.82,
+      "detected_by": [
+        "yolo",
+        "dinov2"
+      ]
+    }
+  },
+  "deficiency_analysis": {
+    "omega3_deficiency": {
+      "probability": 0.2115,
+      "probability_pct": "21.1%",
+      "priority_rank": 1,
+      "foods": [
+        "salmon",
+        "walnuts",
+        "flaxseed",
+        "chia seeds",
+        "mackerel"
+      ],
+      "confidence_band": "high"
+    },
+    "dehydration": {
+      "probability": 0.1456,
+      "probability_pct": "14.6%",
+      "priority_rank": 2,
+      "foods": [
+        "drink 8+ glasses water daily",
+        "cucumber",
+        "watermelon"
+      ],
+      "confidence_band": "moderate"
+    },
+    "poor_sleep_quality": {
+      "probability": 0.1346,
+      "probability_pct": "13.5%",
+      "priority_rank": 3,
+      "foods": [
+        "improve sleep schedule",
+        "reduce caffeine after 2pm",
+        "magnesium-rich foods"
+      ],
+      "confidence_band": "moderate"
+    },
+    "high_stress": {
+      "probability": 0.1213,
+      "probability_pct": "12.1%",
+      "priority_rank": 4,
+      "foods": [
+        "meditation",
+        "exercise",
+        "B-complex vitamins",
+        "magnesium"
+      ],
+      "confidence_band": "moderate"
+    },
+    "vitamin_d_deficiency": {
+      "probability": 0.1021,
+      "probability_pct": "10.2%",
+      "priority_rank": 5,
+      "foods": [
+        "fatty fish",
+        "egg yolks",
+        "fortified milk",
+        "mushrooms"
+      ],
+      "confidence_band": "moderate"
+    },
+    "hormonal_imbalance": {
+      "probability": 0.0629,
+      "probability_pct": "6.3%",
+      "priority_rank": 6,
+      "foods": [
+        "see a doctor",
+        "reduce sugar",
+        "increase fiber",
+        "healthy fats"
+      ],
+      "confidence_band": "low"
+    },
+    "iron_deficiency": {
+      "probability": 0.0568,
+      "probability_pct": "5.7%",
+      "priority_rank": 7,
+      "foods": [
+        "spinach",
+        "lentils",
+        "red meat",
+        "tofu",
+        "pumpkin seeds"
+      ],
+      "confidence_band": "low"
+    },
+    "b12_deficiency": {
+      "probability": 0.0462,
+      "probability_pct": "4.6%",
+      "priority_rank": 8,
+      "foods": [
+        "eggs",
+        "dairy",
+        "salmon",
+        "beef liver",
+        "fortified cereals"
+      ],
+      "confidence_band": "low"
+    },
+    "zinc_deficiency": {
+      "probability": 0.0426,
+      "probability_pct": "4.3%",
+      "priority_rank": 9,
+      "foods": [
+        "oysters",
+        "beef",
+        "chickpeas",
+        "cashews",
+        "pumpkin seeds"
+      ],
+      "confidence_band": "low"
+    },
+    "vitamin_c_deficiency": {
+      "probability": 0.0423,
+      "probability_pct": "4.2%",
+      "priority_rank": 10,
+      "foods": [
+        "citrus fruits",
+        "bell peppers",
+        "broccoli",
+        "kiwi"
+      ],
+      "confidence_band": "low"
+    },
+    "vitamin_a_deficiency": {
+      "probability": 0.0341,
+      "probability_pct": "3.4%",
+      "priority_rank": 11,
+      "foods": [
+        "sweet potato",
+        "carrots",
+        "kale",
+        "egg yolks",
+        "liver"
+      ],
+      "confidence_band": "low"
+    }
+  },
+  "top_insights": [
+    {
+      "rank": 1,
+      "issue": "omega3_deficiency",
+      "probability": "21.1%",
+      "priority": "HIGH",
+      "top_foods": [
+        "salmon",
+        "walnuts",
+        "flaxseed"
+      ]
+    },
+    {
+      "rank": 2,
+      "issue": "dehydration",
+      "probability": "14.6%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "drink 8+ glasses water daily",
+        "cucumber",
+        "watermelon"
+      ]
+    },
+    {
+      "rank": 3,
+      "issue": "poor_sleep_quality",
+      "probability": "13.5%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "improve sleep schedule",
+        "reduce caffeine after 2pm",
+        "magnesium-rich foods"
+      ]
+    },
+    {
+      "rank": 4,
+      "issue": "high_stress",
+      "probability": "12.1%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "meditation",
+        "exercise",
+        "B-complex vitamins"
+      ]
+    },
+    {
+      "rank": 5,
+      "issue": "vitamin_d_deficiency",
+      "probability": "10.2%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "fatty fish",
+        "egg yolks",
+        "fortified milk"
+      ]
+    }
+  ],
+  "yolo_detections": {
+    "dark_circle": 0.759
+  },
+  "timing_ms": {
+    "preprocessing": 83.0,
+    "yolo": 326.0,
+    "dinov2": 57.0,
+    "severity_mlp": 12.0,
+    "bayesian": 0.0
+  },
+  "disclaimer": "FaceFuel provides wellness awareness only \u2014 not medical diagnosis. Visual signs have multiple causes. Please consult a qualified healthcare provider before making health decisions.",
+  "visualization": "facefuel_outputs\\Myself_result.jpg"
+}

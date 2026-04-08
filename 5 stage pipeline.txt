@@ -1,0 +1,7 @@
+FaceFuel is a five-stage pipeline that estimates nutritional deficiency
+probabilities from a selfie in 58.3 ms. Combining YOLOv8m lesion detection,
+region-aware DINOv2 ViT-S/14 feature extraction across eight facial zones,
+and Bayesian inference, the system achieves mean F1 = 0.677 across eleven
+skin feature classes without blood tests or clinical equipment.
+
+reference number: JBHI-02210-2026

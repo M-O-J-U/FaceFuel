@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceFuel — Visual Health Scanner</title>
+<style>
+  :root {
+    --bg:       #0f1117;
+    --surface:  #1a1d26;
+    --card:     #22263a;
+    --border:   #2e3349;
+    --accent:   #4f7cff;
+    --accent2:  #7c4fff;
+    --green:    #22c55e;
+    --amber:    #f59e0b;
+    --red:      #ef4444;
+    --text:     #e8eaf0;
+    --muted:    #8892a4;
+    --radius:   14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* ── Header ── */
+  header { background: var(--surface); border-bottom: 1px solid var(--border);
+           padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  .logo  { width: 36px; height: 36px; border-radius: 10px;
+           background: linear-gradient(135deg, var(--accent), var(--accent2));
+           display: flex; align-items: center; justify-content: center;
+           font-size: 18px; }
+  header h1  { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  header span { font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .badge { background: #1e3a5f; color: #60a5fa; border-radius: 20px;
+           padding: 3px 10px; font-size: 11px; font-weight: 600;
+           margin-left: auto; }
+
+  /* ── Layout ── */
+  main  { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:640px){ .grid { grid-template-columns: 1fr; } }
+
+  /* ── Cards ── */
+  .card { background: var(--card); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 20px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--muted);
+                text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+
+  /* ── Upload zones ── */
+  .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius);
+                 padding: 28px 16px; text-align: center; cursor: pointer;
+                 transition: border-color .2s, background .2s; }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent);
+                                               background: #1e2540; }
+  .upload-zone input { display: none; }
+  .upload-zone .icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-zone p   { font-size: 14px; color: var(--muted); }
+  .upload-zone .hint { font-size: 11px; color: var(--border); margin-top: 4px; }
+  .preview-img { width: 100%; max-height: 220px; object-fit: cover;
+                 border-radius: 10px; margin-top: 10px; display: none; }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px;
+         border-radius: 10px; border: none; font-size: 15px; font-weight: 600;
+         cursor: pointer; transition: opacity .15s, transform .1s; }
+  .btn:hover { opacity: .88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2));
+                 color: #fff; width: 100%; justify-content: center; }
+  .btn-secondary { background: var(--surface); color: var(--text);
+                   border: 1px solid var(--border); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  /* ── Progress ── */
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+                   width: 0%; transition: width .3s; border-radius: 2px; }
+
+  /* ── Modality tabs ── */
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab  { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+          background: var(--surface); color: var(--muted); font-size: 13px;
+          cursor: pointer; transition: all .15s; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── Results ── */
+  #results { display: none; }
+  .status-bar { background: var(--surface); border: 1px solid var(--border);
+                border-radius: var(--radius); padding: 14px 18px;
+                display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+         box-shadow: 0 0 6px var(--green); }
+
+  /* ── Feature pills ── */
+  .features-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .feat-pill { background: var(--surface); border: 1px solid var(--border);
+               border-radius: 20px; padding: 5px 12px; font-size: 12px;
+               display: flex; align-items: center; gap: 6px; }
+  .feat-pill .dot-s { width: 6px; height: 6px; border-radius: 50%; }
+  .high-dot   { background: var(--red); }
+  .mod-dot    { background: var(--amber); }
+  .mild-dot   { background: var(--green); }
+
+  /* ── Insight cards ── */
+  .insight { background: var(--surface); border: 1px solid var(--border);
+             border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+             display: flex; gap: 14px; align-items: flex-start; }
+  .rank-badge { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+                background: linear-gradient(135deg, var(--accent), var(--accent2));
+                display: flex; align-items: center; justify-content: center;
+                font-size: 13px; font-weight: 700; color: #fff; }
+  .insight-body h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .insight-body p  { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .prob-bar  { height: 5px; background: var(--border); border-radius: 3px; margin-bottom: 6px; }
+  .prob-fill { height: 100%; background: linear-gradient(90deg,var(--accent),var(--accent2));
+               border-radius: 3px; }
+  .foods-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .food-tag  { background: #1e2a1e; color: #86efac; border-radius: 6px;
+               padding: 2px 8px; font-size: 11px; }
+  .src-tag   { background: #1e1e3a; color: #a5b4fc; border-radius: 6px;
+               padding: 2px 8px; font-size: 10px; margin-left: auto; flex-shrink: 0; }
+
+  /* ── Full table ── */
+  .def-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .def-table th { text-align: left; color: var(--muted); font-weight: 600;
+                  font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+                  padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .def-table td { padding: 9px 10px; border-bottom: 1px solid #1e2132; }
+  .def-table tr:last-child td { border: none; }
+  .def-table tr:hover td { background: #1e2035; }
+  .conf-badge { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+  .high-conf { background: #1e2a1e; color: #86efac; }
+  .mod-conf  { background: #2a2510; color: #fcd34d; }
+  .low-conf  { background: #1e1e2a; color: #94a3b8; }
+
+  /* ── Image previews in results ── */
+  .result-imgs { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .result-img-card { background: var(--surface); border: 1px solid var(--border);
+                     border-radius: 10px; overflow: hidden; flex: 1; min-width: 140px; max-width: 200px; }
+  .result-img-card img { width: 100%; display: block; }
+  .result-img-card span { display: block; font-size: 11px; color: var(--muted);
+                          padding: 6px 10px; }
+
+  /* ── Disclaimer ── */
+  .disclaimer { background: #1a1a0e; border: 1px solid #3a3010;
+                border-radius: 10px; padding: 12px 16px; font-size: 12px;
+                color: #d4b96a; margin-top: 20px; display: flex; gap: 8px; }
+
+  /* ── Spinner ── */
+  .spinner { display: none; align-items: center; gap: 10px; padding: 14px 18px;
+             background: var(--surface); border: 1px solid var(--border);
+             border-radius: var(--radius); margin: 16px 0; }
+  .spin { width: 18px; height: 18px; border: 2px solid var(--border);
+          border-top-color: var(--accent); border-radius: 50%;
+          animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Error ── */
+  .error-box { background: #1e0e0e; border: 1px solid #5c1a1a;
+               border-radius: 10px; padding: 14px; color: #f87171;
+               font-size: 13px; display: none; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">👁</div>
+  <div>
+    <h1>FaceFuel<span>v3 — TriModal</span></h1>
+  </div>
+  <div class="badge">3 Modalities · 16 Dimensions</div>
+</header>
+
+<main>
+
+  <!-- ── Mode Selector ── -->
+  <div class="tabs" style="margin-top:20px;">
+    <div class="tab active" onclick="setMode('face')">📸 Selfie only</div>
+    <div class="tab" onclick="setMode('combined')">📸 + 👅 Selfie + Tongue</div>
+  </div>
+
+  <!-- ── Upload Area ── -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">📸 Selfie (Face + Eye)</div>
+      <div class="upload-zone" id="face-zone"
+           ondragover="drag(event,'face-zone')" ondragleave="undrag('face-zone')"
+           ondrop="drop(event,'face')" onclick="document.getElementById('face-input').click()">
+        <input type="file" id="face-input" accept="image/*" onchange="preview(this,'face')">
+        <div class="icon">🤳</div>
+        <p>Tap or drag your selfie here</p>
+        <p class="hint">Face forward · Good lighting · No glasses</p>
+        <img id="face-preview" class="preview-img">
+      </div>
+    </div>
+
+    <div class="card" id="tongue-card" style="display:none;">
+      <div class="card-title">👅 Tongue Photo (Optional)</div>
+      <div class="upload-zone" id="tongue-zone"
+           ondragover="drag(event,'tongue-zone')" ondragleave="undrag('tongue-zone')"
+           ondrop="drop(event,'tongue')" onclick="document.getElementById('tongue-input').click()">
+        <input type="file" id="tongue-input" accept="image/*" onchange="preview(this,'tongue')">
+        <div class="icon">👅</div>
+        <p>Tap or drag your tongue photo</p>
+        <p class="hint">Extend tongue · Bright light · No filter</p>
+        <img id="tongue-preview" class="preview-img">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Analyze Button ── -->
+  <div style="margin-top:16px;">
+    <div class="progress-bar" style="margin-bottom:12px;"><div class="progress-fill" id="progress"></div></div>
+    <button class="btn btn-primary" id="analyze-btn" onclick="analyze()">
+      🔬 Analyze Now
+    </button>
+    <div class="error-box" id="error-box"></div>
+  </div>
+
+  <!-- ── Spinner ── -->
+  <div class="spinner" id="spinner">
+    <div class="spin"></div>
+    <span id="spinner-text">Analyzing your selfie...</span>
+  </div>
+
+  <!-- ── Results ── -->
+  <div id="results">
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="dot"></div>
+      <div>
+        <strong>Analysis complete</strong>
+        <span style="color:var(--muted);font-size:12px;margin-left:8px;" id="modality-label"></span>
+      </div>
+      <span style="margin-left:auto;font-size:12px;color:var(--muted);" id="timing-label"></span>
+    </div>
+
+    <!-- Aligned images -->
+    <div class="result-imgs" id="result-imgs"></div>
+
+    <!-- Features detected -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Features Detected</div>
+      <div id="face-feats-section">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">FACE SKIN</div>
+        <div class="features-row" id="face-feats"></div>
+      </div>
+      <div id="eye-feats-section" style="margin-top:12px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">EYES</div>
+        <div class="features-row" id="eye-feats"></div>
+      </div>
+      <div id="tongue-feats-section" style="margin-top:12px;display:none;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">TONGUE</div>
+        <div class="features-row" id="tongue-feats"></div>
+      </div>
+    </div>
+
+    <!-- Top insights -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Top Insights</div>
+      <div id="insights-list"></div>
+    </div>
+
+    <!-- Full analysis -->
+    <div class="card">
+      <div class="card-title">Full Deficiency Analysis (16 Dimensions)</div>
+      <table class="def-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Deficiency / Issue</th>
+            <th>Probability</th>
+            <th>Source</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody id="def-table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      ⚠️ FaceFuel provides wellness awareness only — not medical diagnosis.
+      Results are probabilistic estimates based on visual biomarkers.
+      Always consult a qualified healthcare provider before acting on these results.
+    </div>
+
+  </div><!-- /results -->
+
+</main>
+
+<script>
+let mode = 'face';
+let files = { face: null, tongue: null };
+let animTimer = null;
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && m==='face') || (i===1 && m==='combined'));
+  });
+  document.getElementById('tongue-card').style.display = m==='combined' ? 'block' : 'none';
+}
+
+function drag(e,id) { e.preventDefault(); document.getElementById(id).classList.add('dragover'); }
+function undrag(id) { document.getElementById(id).classList.remove('dragover'); }
+
+function drop(e, which) {
+  e.preventDefault(); undrag(which+'-zone');
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(which, f);
+}
+
+function preview(input, which) {
+  if (input.files[0]) setFile(which, input.files[0]);
+}
+
+function setFile(which, file) {
+  files[which] = file;
+  const img = document.getElementById(which+'-preview');
+  img.style.display = 'block';
+  img.src = URL.createObjectURL(file);
+}
+
+function showError(msg) {
+  const b = document.getElementById('error-box');
+  b.textContent = '❌ ' + msg;
+  b.style.display = 'block';
+  setTimeout(() => b.style.display='none', 6000);
+}
+
+function animProgress(target, duration) {
+  const fill = document.getElementById('progress');
+  const start = performance.now();
+  const from = parseFloat(fill.style.width)||0;
+  if(animTimer) cancelAnimationFrame(animTimer);
+  function step(now) {
+    const t = Math.min((now-start)/duration, 1);
+    fill.style.width = (from + (target-from)*t) + '%';
+    if(t<1) animTimer = requestAnimationFrame(step);
+  }
+  animTimer = requestAnimationFrame(step);
+}
+
+async function analyze() {
+  if (!files.face) { showError('Please upload a selfie first.'); return; }
+  if (mode==='combined' && !files.tongue) { showError('Please upload a tongue photo.'); return; }
+
+  const btn = document.getElementById('analyze-btn');
+  const sp  = document.getElementById('spinner');
+  const spt = document.getElementById('spinner-text');
+  btn.disabled = true;
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  sp.style.display = 'flex';
+  animProgress(30, 400);
+
+  const steps = mode==='combined'
+    ? ['Aligning face...','Running eye detection...','Extracting features...','Analyzing tongue...','Running Bayesian fusion...']
+    : ['Aligning face...','Running eye detection...','Extracting features...','Running Bayesian inference...'];
+
+  let si = 0;
+  const stepTimer = setInterval(()=>{
+    spt.textContent = steps[Math.min(si++,steps.length-1)];
+    animProgress(30+(si/steps.length)*60, 800);
+  }, 1200);
+
+  try {
+    let data;
+    if (mode==='combined') {
+      const fd = new FormData();
+      fd.append('face', files.face);
+      fd.append('tongue', files.tongue);
+      const r = await fetch('/analyze/combined', {method:'POST',body:fd});
+      data = await r.json();
+    } else {
+      const fd = new FormData();
+      fd.append('file', files.face);
+      const r = await fetch('/analyze', {method:'POST',body:fd});
+      data = await r.json();
+    }
+
+    clearInterval(stepTimer);
+    animProgress(100, 300);
+    sp.style.display = 'none';
+
+    if (data.status === 'no_face_detected') {
+      showError(data.message || 'No face detected.'); btn.disabled=false; return;
+    }
+    if (data.status !== 'success') {
+      showError('Analysis failed. Try a clearer photo.'); btn.disabled=false; return;
+    }
+    renderResults(data);
+
+  } catch(e) {
+    clearInterval(stepTimer);
+    sp.style.display = 'none';
+    showError('Server error. Make sure server.py is running.');
+  }
+  btn.disabled = false;
+}
+
+function renderFeaturePill(name, info) {
+  const level = info.level || 'mild';
+  const dotCls = level==='high'?'high-dot':level==='moderate'?'mod-dot':'mild-dot';
+  const pct = Math.round((info.severity||0)*100);
+  return `<div class="feat-pill">
+    <div class="dot-s ${dotCls}"></div>
+    ${fmt(name)} ${pct}%
+  </div>`;
+}
+
+function fmt(s) {
+  return s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+
+function renderResults(data) {
+  // Status bar
+  const mLabel = {
+    'face+eye':          '📸 Face + Eye',
+    'face+eye+tongue':   '📸 Face + 👁 Eye + 👅 Tongue',
+    'tongue':            '👅 Tongue only'
+  }[data.modality] || data.modality;
+  document.getElementById('modality-label').textContent = mLabel;
+
+  const t = data.timing_ms || {};
+  const total = Object.values(t).reduce((a,b)=>a+(typeof b==='number'?b:0),0);
+  document.getElementById('timing-label').textContent = `${Math.round(total)}ms`;
+
+  // Result images
+  const imgDiv = document.getElementById('result-imgs');
+  imgDiv.innerHTML = '';
+  if (data.aligned_face_b64) {
+    imgDiv.innerHTML += `<div class="result-img-card">
+      <img src="data:image/jpeg;base64,${data.aligned_face_b64}">
+      <span>Aligned face</span></div>`;
+  }
+  if (data.tongue_crop_b64) {
+    imgDiv.innerHTML += `<div class="result-img-card">
+      <img src="data:image/jpeg;base64,${data.tongue_crop_b64}">
+      <span>Tongue crop</span></div>`;
+  }
+
+  // Features
+  const faceFeats = data.face_features || {};
+  const eyeFeats  = data.eye_features  || {};
+  const tongFeats = data.tongue_features || {};
+
+  document.getElementById('face-feats').innerHTML =
+    Object.keys(faceFeats).length
+      ? Object.entries(faceFeats).map(([n,v])=>renderFeaturePill(n,v)).join('')
+      : '<span style="color:var(--muted);font-size:13px;">No notable skin features detected</span>';
+
+  document.getElementById('eye-feats').innerHTML =
+    Object.keys(eyeFeats).length
+      ? Object.entries(eyeFeats).map(([n,v])=>renderFeaturePill(n,v)).join('')
+      : '<span style="color:var(--muted);font-size:13px;">No notable eye features detected</span>';
+
+  const tongSec = document.getElementById('tongue-feats-section');
+  if (Object.keys(tongFeats).length) {
+    tongSec.style.display = 'block';
+    document.getElementById('tongue-feats').innerHTML =
+      Object.entries(tongFeats).map(([n,v])=>renderFeaturePill(n,v)).join('');
+  } else {
+    tongSec.style.display = 'none';
+  }
+
+  // Top insights
+  const insights = data.top_insights || [];
+  document.getElementById('insights-list').innerHTML = insights.map(ins => {
+    const pct = parseFloat(ins.probability)||0;
+    const foods = (ins.top_foods||[]).map(f=>`<span class="food-tag">${f}</span>`).join('');
+    return `<div class="insight">
+      <div class="rank-badge">${ins.rank}</div>
+      <div class="insight-body" style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <h3>${fmt(ins.issue)}</h3>
+          <span class="src-tag">${ins.source||'face'}</span>
+        </div>
+        <p>${ins.advice||''}</p>
+        <div class="prob-bar"><div class="prob-fill" style="width:${Math.min(pct*5,100)}%"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:12px;color:var(--muted);">Probability</span>
+          <strong style="font-size:14px;">${ins.probability}</strong>
+        </div>
+        <div class="foods-row">${foods}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Full table
+  const da = data.deficiency_analysis || {};
+  const sorted = Object.entries(da).sort((a,b)=>a[1].priority_rank-b[1].priority_rank);
+  document.getElementById('def-table-body').innerHTML = sorted.map(([name,info]) => {
+    const cb = info.confidence_band||'low';
+    const cc = cb==='high'?'high-conf':cb==='moderate'?'mod-conf':'low-conf';
+    const pct = parseFloat(info.probability_pct)||0;
+    return `<tr>
+      <td style="color:var(--muted)">${info.priority_rank}</td>
+      <td><strong>${fmt(name)}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px;">
+            <div style="height:100%;width:${Math.min(pct*5,100)}%;background:var(--accent);border-radius:2px;"></div>
+          </div>
+          <span style="min-width:38px;text-align:right;font-size:13px;">${info.probability_pct}</span>
+        </div>
+      </td>
+      <td><span class="src-tag" style="margin:0;">${info.source||'face'}</span></td>
+      <td><span class="conf-badge ${cc}">${cb}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+
+</body>
+</html>

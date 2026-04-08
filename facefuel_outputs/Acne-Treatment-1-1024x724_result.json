@@ -1,0 +1,301 @@
+{
+  "status": "success",
+  "features_detected": {
+    "dark_circle": {
+      "severity": 0.664,
+      "level": "high",
+      "confidence": 0.54,
+      "yolo_count": 2,
+      "detected_by": [
+        "dinov2",
+        "yolo(\u00d72)"
+      ]
+    },
+    "dark_spot": {
+      "severity": 0.589,
+      "level": "moderate",
+      "confidence": 0.59,
+      "yolo_count": 1,
+      "detected_by": [
+        "dinov2",
+        "yolo"
+      ]
+    },
+    "pallor": {
+      "severity": 0.475,
+      "level": "moderate",
+      "confidence": 1.0,
+      "yolo_count": 0,
+      "detected_by": [
+        "color_analysis"
+      ]
+    },
+    "oily_skin": {
+      "severity": 1.0,
+      "level": "high",
+      "confidence": 0.65,
+      "yolo_count": 0,
+      "detected_by": [
+        "color_analysis"
+      ]
+    }
+  },
+  "deficiency_analysis": {
+    "dehydration": {
+      "probability": 0.1348,
+      "probability_pct": "13.5%",
+      "priority_rank": 1,
+      "foods": [
+        "drink 8+ glasses water daily",
+        "cucumber",
+        "watermelon"
+      ],
+      "advice": "Thirst is a late signal. Aim for pale yellow urine.",
+      "confidence_band": "moderate"
+    },
+    "poor_sleep_quality": {
+      "probability": 0.1322,
+      "probability_pct": "13.2%",
+      "priority_rank": 2,
+      "foods": [
+        "improve sleep schedule",
+        "reduce caffeine after 2pm",
+        "magnesium-rich foods"
+      ],
+      "advice": "Consistent sleep/wake times matter more than total hours. Aim 7\u20139 hrs.",
+      "confidence_band": "moderate"
+    },
+    "vitamin_d_deficiency": {
+      "probability": 0.1125,
+      "probability_pct": "11.2%",
+      "priority_rank": 3,
+      "foods": [
+        "fatty fish",
+        "egg yolks",
+        "fortified milk",
+        "mushrooms"
+      ],
+      "advice": "Get 15\u201330 min of sunlight daily. Consider D3 supplement in winter.",
+      "confidence_band": "moderate"
+    },
+    "iron_deficiency": {
+      "probability": 0.1089,
+      "probability_pct": "10.9%",
+      "priority_rank": 4,
+      "foods": [
+        "spinach",
+        "lentils",
+        "red meat",
+        "tofu",
+        "pumpkin seeds"
+      ],
+      "advice": "Pair iron-rich foods with Vitamin C to boost absorption.",
+      "confidence_band": "moderate"
+    },
+    "high_stress": {
+      "probability": 0.0993,
+      "probability_pct": "9.9%",
+      "priority_rank": 5,
+      "foods": [
+        "meditation",
+        "exercise",
+        "B-complex vitamins",
+        "magnesium"
+      ],
+      "advice": "Chronic stress depletes B vitamins and magnesium. Both diet and stress management needed.",
+      "confidence_band": "low"
+    },
+    "zinc_deficiency": {
+      "probability": 0.0868,
+      "probability_pct": "8.7%",
+      "priority_rank": 6,
+      "foods": [
+        "oysters",
+        "beef",
+        "chickpeas",
+        "cashews",
+        "pumpkin seeds"
+      ],
+      "advice": "Soak legumes before cooking to reduce phytates.",
+      "confidence_band": "low"
+    },
+    "b12_deficiency": {
+      "probability": 0.0813,
+      "probability_pct": "8.1%",
+      "priority_rank": 7,
+      "foods": [
+        "eggs",
+        "dairy",
+        "salmon",
+        "beef liver",
+        "fortified cereals"
+      ],
+      "advice": "B12 mainly from animal sources. Vegans/vegetarians should supplement.",
+      "confidence_band": "low"
+    },
+    "hormonal_imbalance": {
+      "probability": 0.0766,
+      "probability_pct": "7.7%",
+      "priority_rank": 8,
+      "foods": [
+        "see a doctor",
+        "reduce sugar",
+        "increase fiber",
+        "healthy fats"
+      ],
+      "advice": "Requires medical evaluation. Diet supports, not replaces treatment.",
+      "confidence_band": "low"
+    },
+    "omega3_deficiency": {
+      "probability": 0.0693,
+      "probability_pct": "6.9%",
+      "priority_rank": 9,
+      "foods": [
+        "salmon",
+        "walnuts",
+        "flaxseed",
+        "chia seeds",
+        "mackerel"
+      ],
+      "advice": "Aim for 2 servings of fatty fish per week or consider fish oil.",
+      "confidence_band": "low"
+    },
+    "vitamin_a_deficiency": {
+      "probability": 0.052,
+      "probability_pct": "5.2%",
+      "priority_rank": 10,
+      "foods": [
+        "sweet potato",
+        "carrots",
+        "kale",
+        "egg yolks",
+        "liver"
+      ],
+      "advice": "Fat-soluble vitamin \u2014 pair with healthy fats for absorption.",
+      "confidence_band": "low"
+    },
+    "vitamin_c_deficiency": {
+      "probability": 0.0462,
+      "probability_pct": "4.6%",
+      "priority_rank": 11,
+      "foods": [
+        "citrus fruits",
+        "bell peppers",
+        "broccoli",
+        "kiwi"
+      ],
+      "advice": "Cooking destroys Vitamin C. Eat some raw fruits/vegetables daily.",
+      "confidence_band": "low"
+    }
+  },
+  "top_insights": [
+    {
+      "rank": 1,
+      "issue": "dehydration",
+      "probability": "13.5%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "drink 8+ glasses water daily",
+        "cucumber",
+        "watermelon"
+      ],
+      "advice": "Thirst is a late signal. Aim for pale yellow urine."
+    },
+    {
+      "rank": 2,
+      "issue": "poor_sleep_quality",
+      "probability": "13.2%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "improve sleep schedule",
+        "reduce caffeine after 2pm",
+        "magnesium-rich foods"
+      ],
+      "advice": "Consistent sleep/wake times matter more than total hours. Aim 7\u20139 hrs."
+    },
+    {
+      "rank": 3,
+      "issue": "vitamin_d_deficiency",
+      "probability": "11.2%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "fatty fish",
+        "egg yolks",
+        "fortified milk"
+      ],
+      "advice": "Get 15\u201330 min of sunlight daily. Consider D3 supplement in winter."
+    },
+    {
+      "rank": 4,
+      "issue": "iron_deficiency",
+      "probability": "10.9%",
+      "priority": "MODERATE",
+      "top_foods": [
+        "spinach",
+        "lentils",
+        "red meat"
+      ],
+      "advice": "Pair iron-rich foods with Vitamin C to boost absorption."
+    },
+    {
+      "rank": 5,
+      "issue": "high_stress",
+      "probability": "9.9%",
+      "priority": "LOW",
+      "top_foods": [
+        "meditation",
+        "exercise",
+        "B-complex vitamins"
+      ],
+      "advice": "Chronic stress depletes B vitamins and magnesium. Both diet and stress management needed."
+    }
+  ],
+  "yolo_detections": {
+    "dark_circle": 0.781,
+    "dark_spot": 0.35
+  },
+  "yolo_counts": {
+    "dark_circle": 2,
+    "dark_spot": 1
+  },
+  "color_features": {
+    "pallor_color": {
+      "score": 0.475,
+      "conf": 1.0
+    },
+    "redness_color": {
+      "score": 0.0,
+      "conf": 1.0
+    },
+    "dark_circle_color": {
+      "score": 0.217,
+      "conf": 1.0
+    },
+    "yellow_sclera_color": {
+      "score": 0.0,
+      "conf": 1.0
+    },
+    "skin_texture_color": {
+      "score": 1.0,
+      "conf": 0.7
+    },
+    "oiliness_color": {
+      "score": 1.0,
+      "conf": 0.65
+    },
+    "lip_pallor_color": {
+      "score": 0.0,
+      "conf": 0.6
+    }
+  },
+  "timing_ms": {
+    "preprocessing": 114.0,
+    "color_analysis": 5.0,
+    "yolo": 706.0,
+    "dinov2": 81.0,
+    "severity_mlp": 37.0,
+    "bayesian": 1.0
+  },
+  "disclaimer": "FaceFuel provides wellness awareness only \u2014 not medical diagnosis. Visual signs have multiple causes. Consult a qualified healthcare provider before making health decisions based on these results.",
+  "visualization": "facefuel_outputs\\Acne-Treatment-1-1024x724_result.jpg"
+}
