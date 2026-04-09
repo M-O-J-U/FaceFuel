@@ -12,6 +12,8 @@
 
 It is the first system to combine face skin, ocular biomarkers, and tongue surface in a single probabilistic Bayesian framework. Eye analysis runs automatically from the same selfie. Tongue analysis is optional and adds 4 exclusive deficiency dimensions.
 
+Check out the promo @:
+https://youtu.be/_RNtt8QNQOs?si=Nus4Sj01vJsvH1kC
 ---
 
 ## Performance
