@@ -56,25 +56,30 @@ Every area in the response carries `status` (`flagged`, `no_signal` or `not_asse
 modalities that contributed (`sources`), the modalities that *could* have
 (`assessed_by`), and the specific features behind it (`evidence`).
 
-## Results (v4 models)
+## Results (v4.2 — models in use)
 
-Detection: YOLO11m, 640 px, 80 epochs, best checkpoint, on each modality's validation split.
+All numbers are on a **held-out test split** that no model was trained or tuned on:
+images that were in the v4 validation set and never (even as a near-duplicate) in v4
+training, so old and new models are compared fairly. Full tables, including per-class
+results: [docs/model_comparison.md](docs/model_comparison.md).
 
-| Modality | Classes (trained / configured) | mAP@0.5 | Severity MLP F1 |
-|---|---|---|---|
-| Eye | 6 / 6 | **0.993** | 0.985 |
-| Tongue | 14 / 18 | **0.871** | 0.761 |
-| Face | 6 / 10 | **0.559** | 0.901 |
+| Modality | Detector (YOLO11m) mAP@0.5 | Severity MLP mean F1 | Active classes | Models in use |
+|---|---|---|---|---|
+| Eye | **0.991** | **0.901** | 6 / 6 | v5 detector + v5 MLP |
+| Tongue | **0.841** | **0.701** | 14 / 18 | v4 detector + v5 MLP |
+| Face | **0.672** | **0.778** | 9 / 10 | v5 detector + v5 MLP |
 
-- **Face:** the overall mAP is dragged down by tiny validation splits for some classes. The strong classes are eczema (0.973), rosacea (0.817) and dark circle (0.773). Four classes (acne, blackhead, vitiligo, butterfly rash) have no training data and are disabled.
-- **Tongue:** four classes (no coating, purple tongue, angular stomatitis, median rhomboid glossitis) have no data and are disabled. lichen_planus is weak (F1 0.25, ~82 samples).
-- **Eye:** `scleral_icterus` has a three-layer false-positive guard: a 0.65 detector threshold, a LAB colour gate, and detector confirmation required.
+- **Eye:** trained with 745 photos of normal eyes as negatives; only **6 % of normal eyes get a false flag** (the previous model flagged 94 %). Scleral icterus keeps its three-layer guard (0.65 detector threshold, LAB colour gate, detector confirmation required).
+- **Tongue:** the retrained detector scored lower (0.804) than the existing one, so the existing detector stays in service. Four classes (no coating, purple tongue, angular stomatitis, median rhomboid glossitis) still have no training data and are disabled.
+- **Face:** retrained after fixing a class-shift bug in the v4 training labels. Acne, vitiligo and butterfly rash are now active (0.870 / 0.854 / 0.430 AP); only blackhead lacks data. Strong classes: dark spot 0.888, acne 0.870, vitiligo 0.854.
 
-> **Read these numbers carefully.** They are in-distribution validation scores. MLP F1 is
-> the best epoch on the same split it is reported on (no held-out test set). On real
-> selfies the severity MLPs over-report because they were never trained on healthy
-> examples, so FaceFuel requires detector confirmation before reporting a sign. See
-> [docs/RESEARCH_NOTES.md](docs/RESEARCH_NOTES.md) §1 and [docs/domain_shift_probe.md](docs/domain_shift_probe.md).
+> **How to read these numbers.** They are image-level scores on curated dataset photos,
+> mostly close-ups. They are **not** measures of nutritional or medical accuracy, and real
+> selfies are harder: the face severity model still has no healthy-face training photos,
+> so FaceFuel reports a sign only when the detector confirms it. Earlier published v4
+> figures (eye 0.993, tongue 0.871, face 0.559) were inflated by train/validation
+> duplicates and, for face, scored against shifted labels. See
+> [docs/RESEARCH_NOTES.md](docs/RESEARCH_NOTES.md) §1.
 
 ### Project history
 
@@ -83,7 +88,8 @@ Detection: YOLO11m, 640 px, 80 epochs, best checkpoint, on each modality's valid
 | v1–v2 | [Paper 1](https://doi.org/10.5281/zenodo.19394708) | Face | YOLOv8m mAP 0.790 (11 classes, 5,721 images); mean F1 0.677; 58 ms/image |
 | v2 | [Paper 2](https://doi.org/10.5281/zenodo.19411317) | Face + tongue | Tongue YOLOv8m mAP 0.812 (12 classes, 9,125 images); PoE fusion 0.55 / 0.45 |
 | v3 | [Paper 3](https://doi.org/10.5281/zenodo.19468059) | Face + tongue + eye | Eye mAP 0.913 (3 classes); face YOLO11m mAP 0.872; < 235 ms |
-| v4 | — | Face + tongue + eye | Scaled datasets, YOLO11m everywhere; eye 0.993, tongue 0.871, face 0.559 (different, larger validation sets, so not directly comparable to v3) |
+| v4 | — | Face + tongue + eye | Scaled datasets; reported eye 0.993 / tongue 0.871 / face 0.559 on validation splits later found to leak duplicates of training images |
+| v4.2 | — | Face + tongue + eye | Clean deduplicated datasets, face labels fixed, eye negatives, held-out test split: eye 0.991 / tongue 0.841 / face 0.672 |
 
 ## Quick start
 
@@ -159,14 +165,15 @@ server.py                FastAPI app — API + web frontend
 facefuel/                runtime package
   paths.py               every model-file location (env-overridable), resolved in one place
   schema.py              class lists, inactive classes, 22-area framework, feature→area map
-  models.py              shared DINOv2, v4 severity-MLP loader (active/inactive heads), YOLO
+  models.py              shared DINOv2, severity-MLP loader (active/inactive heads), YOLO
   face.py eye.py tongue.py   per-modality pipelines
   evidence.py fusion.py  evidence rules, product-of-experts fusion, provenance
 static/index.html        web frontend (no build step)
 pipeline/                training pipeline, run in order from the repo root
   01_download_datasets.py  02_diagnose_datasets.py  03_merge_{face,tongue,eye}.py
+  03b_build_clean_v5.py (dedupe, fix face labels, add negatives, held-out test split)
   04_train_yolo.py  05_extract_features.py  06_train_severity_mlp.py
-scripts/                 collect_weights.py, domain_shift_probe.py, scan_project.py
+scripts/                 collect_weights.py, compare_models.py, domain_shift_probe.py, scan_project.py
 tests/                   pytest — fusion/provenance (no GPU) + API smoke tests (need weights)
 docs/                    PROJECT_SUMMARY, RESEARCH_NOTES, DEPLOYMENT, PUBLISH_CHECKLIST, figures
 paper_results/           LaTeX sources and figures for the three papers
@@ -178,8 +185,8 @@ Run the tests with `pip install -r requirements-dev.txt && python -m pytest test
 ## Limitations
 
 - **No clinical validation yet.** No model has been compared against blood tests. The mapping from visual signs to nutrition areas is literature-informed and expert-specified, not learned from outcome data.
-- **Domain shift.** The models were trained on curated dataset images and have not seen healthy examples; detectors also over-fire on some real selfies (e.g. drooping eyelid).
-- **Coverage gaps.** Seven disabled classes, and areas such as vitamin D, hormonal balance, riboflavin and copper currently have no route to evidence. They are reported as *not assessed*.
+- **Domain shift.** The models were trained on curated dataset images. Eye training now includes normal eyes, but face training still has no healthy faces, and detectors can over-fire on real selfies (e.g. drooping eyelid).
+- **Coverage gaps.** Five classes still have no training data (blackhead and four tongue classes), and vitamin D and riboflavin have no route to evidence. They are reported as *not assessed*.
 - **Representativeness.** Training data skin-tone diversity has not been audited.
 
 The research plan to address these is in [docs/RESEARCH_NOTES.md](docs/RESEARCH_NOTES.md).

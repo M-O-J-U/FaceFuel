@@ -1,5 +1,6 @@
 """
-Tongue modality (v4 — YOLO11m mAP50 0.871, MLP F1 0.761).
+Tongue modality (v4 YOLO11m — kept: it beat the v5 retrain on the held-out test,
+mAP50 0.841 vs 0.804 — plus the v5 MLP, mean F1 0.701 vs 0.691).
 
   tongue photo → one YOLO pass on the full photo (the detector was trained on
   full photos) → tongue_body box, when found, gives the crop and feature boxes

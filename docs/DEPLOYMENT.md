@@ -9,7 +9,7 @@ FaceFuel is one FastAPI process that serves both the API and the web frontend
 |---|---|---|
 | GPU | Any CUDA GPU with ≥ 4 GB VRAM (all models use < 2 GB) | RTX 4070 Super 12 GB |
 | CPU-only | Works (`FACEFUEL_DEVICE=cpu`); roughly 1–3 s per request | — |
-| RAM | 4 GB | 32 GB |
+| RAM | 4 GB to serve; ~10 GB free to retrain YOLO | 16 GB |
 | Python | 3.10–3.14 | 3.14 (Windows), 3.12 (Docker image) |
 | Disk | ~135 MB weights + ~4 GB for PyTorch/CUDA wheels | |
 
@@ -23,12 +23,12 @@ environment variable → `$FACEFUEL_WEIGHTS_DIR/<name>` → legacy training-outp
 
 | Key / env var | Canonical file in `weights/` | Size |
 |---|---|---|
-| `FACEFUEL_FACE_YOLO` | `face_yolo11m_v4.pt` | 39 MB |
+| `FACEFUEL_FACE_YOLO` | `face_yolo11m_v5.pt` | 39 MB |
 | `FACEFUEL_TONGUE_YOLO` | `tongue_yolo11m_v4.pt` | 39 MB |
-| `FACEFUEL_EYE_YOLO` | `eye_yolo11m_v2.pt` | 39 MB |
-| `FACEFUEL_FACE_MLP` | `face_severity_mlp_v4.pt` | 7 MB |
-| `FACEFUEL_TONGUE_MLP` | `tongue_severity_mlp_v4.pt` | 3.4 MB |
-| `FACEFUEL_EYE_MLP` | `eye_severity_mlp_v4.pt` | 3.1 MB |
+| `FACEFUEL_EYE_YOLO` | `eye_yolo11m_v5.pt` | 39 MB |
+| `FACEFUEL_FACE_MLP` | `face_severity_mlp_v5.pt` | 7 MB |
+| `FACEFUEL_TONGUE_MLP` | `tongue_severity_mlp_v5.pt` | 3.4 MB |
+| `FACEFUEL_EYE_MLP` | `eye_severity_mlp_v5.pt` | 3.1 MB |
 | `FACEFUEL_FACE_LANDMARKER` | `face_landmarker.task` (MediaPipe, Apache-2.0) | 3.6 MB |
 
 DINOv2 ViT-S/14 (`facebook/dinov2-small`, Apache-2.0) is downloaded from the Hugging Face Hub on first start
@@ -39,7 +39,7 @@ python scripts/collect_weights.py          # copy the 7 files into ./weights (+ 
 python scripts/collect_weights.py --check  # show where each file resolves from
 ```
 
-**Distributing weights:** don't commit them to git. Attach a `facefuel-weights-v4.zip` of
+**Distributing weights:** don't commit them to git. Attach a `facefuel-weights-v4.2.zip` of
 `weights/` to a GitHub Release (assets can be up to 2 GB) or push it to a Hugging Face model repo, and
 download it during deployment. Check the licences of the training datasets before
 publishing weights trained on them (see `docs/PUBLISH_CHECKLIST.md`).

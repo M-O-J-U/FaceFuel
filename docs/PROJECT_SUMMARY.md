@@ -22,7 +22,7 @@ a wellness-awareness tool, not a diagnostic device, and every output says so.
 A five-stage pipeline, repeated for three "visual channels" and then fused:
 
 1. **Locate:** MediaPipe aligns the face from 478 landmarks; the eye band is cut from the aligned face; the tongue comes from a second photo.
-2. **Detect:** a YOLO11m detector per channel marks visible signs: 6 face classes, 6 eye classes and 14 tongue classes are active.
+2. **Detect:** a YOLO11m detector per channel marks visible signs: 9 face classes, 6 eye classes and 14 tongue classes are active.
 3. **Describe:** DINOv2 (ViT-S/14) embeds fixed anatomical regions such as the cheeks, sclera and tongue zones.
 4. **Grade:** a small multi-head network grades each detected sign. It is run 20 times with dropout (Monte Carlo dropout), so it reports its own uncertainty.
 5. **Fuse:** signs map onto a 22-area nutrition and lifestyle framework, and the three channels are combined with a weighted product of experts (face 0.40, tongue 0.35, eye 0.25). The system tracks where every conclusion came from. An area that none of the channels used can see is reported as *not assessed* rather than guessed.
@@ -37,8 +37,9 @@ a full three-channel analysis takes about 0.2 seconds, and all models together u
 | **Paper 1 — Face** ([10.5281/zenodo.19394708](https://doi.org/10.5281/zenodo.19394708)) | Selfie → 11 skin features → Bayesian engine over 11 deficiency categories | YOLOv8m mAP@0.5 0.790 on 5,721 images; mean F1 0.677; 58 ms per image. Ablations: region-aware DINOv2 +0.149 F1 over whole-face features. |
 | **Paper 2 — Face + tongue** ([10.5281/zenodo.19411317](https://doi.org/10.5281/zenodo.19411317)) | Added a tongue pipeline and product-of-experts fusion; four categories visible only from the tongue | Tongue mAP 0.812 on 9,125 images; face and tongue agree on the top category only 48.9 % of the time, so they carry different information |
 | **Paper 3 — Tri-modal** ([10.5281/zenodo.19468059](https://doi.org/10.5281/zenodo.19468059)) | Added an eye channel from the same selfie (pallor, yellow sclera, xanthelasma); face moved to YOLO11m | Eye mAP 0.913; face mAP 0.790 → 0.872; < 235 ms end to end |
-| **v4 — Scale** (unpublished) | Re-collected and merged much larger datasets; retrained all three detectors and graders | Eye mAP 0.993, tongue 0.871, face 0.559 on new, larger validation sets; grader F1 0.985 / 0.761 / 0.901 |
-| **v4.1 — Engineering audit** (Oct 2026) | Rebuilt the inference layer as one package with shared, tested components; new web interface; deployment tooling | All endpoints working; 21 automated tests; train/inference feature parity verified (cosine ≥ 0.99999) |
+| **v4 — Scale** (unpublished) | Re-collected and merged much larger datasets; retrained all three detectors and graders | Reported eye mAP 0.993, tongue 0.871, face 0.559 — later found to be inflated by duplicated images across splits |
+| **v4.1 — Engineering audit** (Oct 2026) | Rebuilt the inference layer as one package with shared, tested components; new web interface; deployment tooling | All endpoints working; automated tests; train/inference feature parity verified (cosine ≥ 0.99999) |
+| **v4.2 — Clean data, honest numbers** (Oct 2026) | Deduplicated every dataset, fixed shifted face labels, added normal-eye negatives, held-out test split; retrained and adopted models only where they won | Held-out test: eye mAP 0.991 (false flags on normal eyes 94 % → 6 %), tongue 0.841, face 0.672; acne, vitiligo and butterfly rash recovered |
 
 ## The rejection, and what it taught me
 
@@ -55,10 +56,11 @@ benchmarks, but it could not answer the objection, because more labelled *photos
 - The v4 server had never run the v4 face and tongue models: every endpoint was failing, and older models sat underneath.
 - The grading networks had only been trained on images containing a condition, never a healthy one, so on real selfies they over-report. I measured this and published the probe ([domain_shift_probe.md](domain_shift_probe.md)).
 - The reported grader F1 scores were chosen and reported on the same validation split.
+- Up to 56 % of validation images had exact copies in training, and the face labels had been shifted during merging (moles labelled as eczema, acne as wrinkles).
 
 I fixed what engineering can fix: one source of truth for every class list and file path,
 graders that only grade what the detector confirms, full provenance in every result, and
-regression tests. I documented the rest as limitations rather than hiding them. The lesson I
+regression tests. Then I rebuilt the datasets cleanly, retrained, and kept a new model only where it beat the old one on images neither had seen. The eye model now flags 6 % of normal eyes instead of 94 %. I documented what remains as limitations rather than hiding it. The lesson I
 took from it: **in health AI, the hard part is not the model, it is the evidence.**
 
 ## Where it goes next
@@ -66,7 +68,7 @@ took from it: **in health AI, the hard part is not the model, it is the evidence
 The plan, detailed in [RESEARCH_NOTES.md](RESEARCH_NOTES.md), puts clinical evidence ahead of more model work:
 
 1. **External validation against lab values.** A public dataset of 1,485 people pairs eye photos with measured haemoglobin. It is the right first test of whether the pale-eyelid signal tracks real anaemia.
-2. **Add healthy examples** to every channel, retrain, and show the over-reporting fall.
+2. **Add healthy examples** to the face and tongue channels, as v4.2 already did for eyes.
 3. **Calibrate and learn the fusion,** replacing the hand-set weights with fitted, reported ones.
 4. **A small volunteer study** of roughly 150–200 adults with same-day blood panels (CBC, ferritin, B12, vitamin D, lipids), pre-registered and reported to TRIPOD+AI, including whatever comes out negative.
 

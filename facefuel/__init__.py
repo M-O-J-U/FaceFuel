@@ -13,7 +13,7 @@ Runtime package used by server.py. Layout:
 FaceFuel is a wellness-awareness research prototype, NOT a medical device.
 """
 
-__version__ = "4.1.0"
+__version__ = "4.2.0"
 
 DISCLAIMER = (
     "FaceFuel is a research prototype for wellness awareness only. It is not a "

@@ -8,6 +8,7 @@ eye_datasets_v4/
 facefuel_face_v4/
 facefuel_tongue_v4/
 facefuel_eye_v4/
+facefuel_*_v5/
 facefuel_features/
 
 # ── Model weights & training outputs: distribute via GitHub Releases ────────

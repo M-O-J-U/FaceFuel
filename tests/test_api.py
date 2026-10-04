@@ -36,8 +36,8 @@ def test_health_reports_every_modality_ready(client):
 
 def test_info_lists_inactive_classes(client):
     info = client.get("/api/info").json()
-    assert "acne" in info["modalities"]["face"]["inactive_classes"]
-    assert "acne" not in info["modalities"]["face"]["active_classes"]
+    assert info["modalities"]["face"]["inactive_classes"] == ["blackhead"]
+    assert "acne" in info["modalities"]["face"]["active_classes"]
 
 
 def test_blank_image_is_no_face(client):

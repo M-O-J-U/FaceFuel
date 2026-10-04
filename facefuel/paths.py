@@ -18,18 +18,21 @@ WEIGHTS_DIR = Path(os.environ.get("FACEFUEL_WEIGHTS_DIR", ROOT / "weights"))
 
 # key: (env var, canonical filename in WEIGHTS_DIR, legacy path relative to ROOT)
 _FILES = {
-    "face_yolo":       ("FACEFUEL_FACE_YOLO",   "face_yolo11m_v4.pt",
-                        "runs/detect/runs/detect/runs/face/face_yolo11m_v4/weights/best.pt"),
+    # v5 (2026-10-05): retrained on the clean, deduplicated, relabelled v5 sets.
+    # Adopted per modality only where it beat v4 on the held-out v5 test split
+    # (docs/model_comparison.md); the tongue detector stays v4.
+    "face_yolo":       ("FACEFUEL_FACE_YOLO",   "face_yolo11m_v5.pt",
+                        "training_runs/face_v5/weights/best.pt"),
     "tongue_yolo":     ("FACEFUEL_TONGUE_YOLO", "tongue_yolo11m_v4.pt",
                         "runs/detect/training_runs/tongue_v4/weights/best.pt"),
-    "eye_yolo":        ("FACEFUEL_EYE_YOLO",    "eye_yolo11m_v2.pt",
-                        "runs/detect/training_runs/eye_v2/weights/best.pt"),
-    "face_mlp":        ("FACEFUEL_FACE_MLP",    "face_severity_mlp_v4.pt",
-                        "facefuel_models/face_severity_mlp_v4.pt"),
-    "tongue_mlp":      ("FACEFUEL_TONGUE_MLP",  "tongue_severity_mlp_v4.pt",
-                        "facefuel_models/tongue_severity_mlp_v4.pt"),
-    "eye_mlp":         ("FACEFUEL_EYE_MLP",     "eye_severity_mlp_v4.pt",
-                        "facefuel_models/eye_severity_mlp_v4.pt"),
+    "eye_yolo":        ("FACEFUEL_EYE_YOLO",    "eye_yolo11m_v5.pt",
+                        "training_runs/eye_v5/weights/best.pt"),
+    "face_mlp":        ("FACEFUEL_FACE_MLP",    "face_severity_mlp_v5.pt",
+                        "facefuel_models/face_severity_mlp_v5.pt"),
+    "tongue_mlp":      ("FACEFUEL_TONGUE_MLP",  "tongue_severity_mlp_v5.pt",
+                        "facefuel_models/tongue_severity_mlp_v5.pt"),
+    "eye_mlp":         ("FACEFUEL_EYE_MLP",     "eye_severity_mlp_v5.pt",
+                        "facefuel_models/eye_severity_mlp_v5.pt"),
     "face_landmarker": ("FACEFUEL_FACE_LANDMARKER", "face_landmarker.task",
                         "face_landmarker.task"),
 }

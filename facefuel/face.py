@@ -1,5 +1,6 @@
 """
-Face modality (v4).
+Face modality (v5 YOLO11m + v5 MLP; held-out test: detector mAP50 0.672,
+MLP mean F1 0.778 over 9 active classes — docs/model_comparison.md).
 
   selfie → MediaPipe FaceLandmarker alignment (eyes at fixed positions)
          → YOLO11m v4 on the aligned face (512 px)

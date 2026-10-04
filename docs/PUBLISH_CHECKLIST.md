@@ -53,7 +53,7 @@ Whichever you choose, the working tree is already cleaned: those files now live 
 
 ```bash
 python scripts/collect_weights.py                # → weights/ + MANIFEST.txt (sha256)
-# zip weights/ as facefuel-weights-v4.zip and attach it to a GitHub Release (assets up to 2 GB)
+# zip weights/ as facefuel-weights-v4.2.zip and attach it to a GitHub Release (assets up to 2 GB)
 ```
 
 **Licence check first.** The weights are derived from third-party datasets (Roboflow,

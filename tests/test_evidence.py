@@ -34,9 +34,9 @@ def test_detector_alone_reports_scaled_confidence():
 
 
 def test_inactive_classes_never_reported():
-    feats, unconf = collect_features(FACE, schema.FACE_INACTIVE, sev(acne=0.99), UNC,
-                                     {"acne": 0.9}, {"acne": 5})
-    assert "acne" not in feats and "acne" not in unconf
+    feats, unconf = collect_features(FACE, schema.FACE_INACTIVE, sev(blackhead=0.99), UNC,
+                                     {"blackhead": 0.9}, {"blackhead": 5})
+    assert "blackhead" not in feats and "blackhead" not in unconf
 
 
 def test_small_lesion_count_raises_severity():

@@ -59,6 +59,60 @@ found the server now analyses the whole photo (matching how MLP features were
 extracted) and warns the user. Adding `tongue_body` boxes (or a segmentation model
 such as TongueSAM-style SAM fine-tunes) is cheap and would help a lot.
 
+### 1.6a Face labels were shifted during the v4 merge (found 2026-10-04)
+Tracing every face image back to its source folder by exact file hash shows that,
+for classification-folder sources (DermNet, skin-disease collections, augmented
+dermoscopy, face-skin set), the merge wrote **shifted class ids**:
+
+| Intended class (per `03_merge_face.py`) | Label actually written |
+|---|---|
+| `dark_spot` (melanoma, nevi, BCC, keratoses, warts — 13k+ images) | `eczema` |
+| `redness` (vascular tumours, vasculitis, hives, exanthems) | `rosacea` |
+| `acne` (DermNet acne & rosacea, facial acne) | `wrinkle` |
+| `eczema`, `vitiligo`, `butterfly_rash`, `rosacea` (≈ 12k images) | **no label** — the image was kept as a YOLO background |
+
+Only the `orig_` source (v1–v3 data with real bounding boxes) was labelled correctly.
+Consequences: the v4 face per-class scores (eczema 0.973, rosacea 0.817…) describe
+the wrong conditions, the "zero-data" classes acne / vitiligo / butterfly_rash in fact
+had ≈ 1.3k / 1.1k / 0.5k images, and the detector was taught that 12k photos of
+skin disease contain nothing. `pipeline/03b_build_clean_v5.py` relabels these by hash.
+
+### 1.6b Train/validation leakage inflated every v4 score
+Exact duplicate files appear in both splits: **56 % of eye validation images, 34 % of
+tongue and 32 % of face** had a byte-identical copy in training — before counting
+flipped/rotated augmentations, which `03b` also groups. Re-scored on a fair test split
+(only v4-validation images that were never in v4 training), the v4 eye detector drops
+from the reported **mAP50 0.993 to 0.829** (precision 0.755; drooping eyelid 0.747).
+All published v4 numbers should be treated as optimistic until re-measured on the v5
+test splits (`docs/model_comparison.md`).
+
+### 1.7 Outcome of the v5 retraining (2026-10-05) — what changed in v4.2
+`pipeline/03b_build_clean_v5.py` rebuilt all three datasets: it removed exact and
+flip/rotation duplicates (38 % of eye, 37 % of tongue and 23 % of face images were
+duplicates), relabelled 29,175 face images by source-folder hash, added 745 verified
+normal-eye photos as negatives, and created a **held-out test split** made only of
+v4-validation images that were never in v4 training. Old and new models were scored on
+that split (`scripts/compare_models.py` → [`model_comparison.md`](model_comparison.md)):
+
+| | Detector mAP50 old → new | Severity MLP mean F1 old → new | Adopted |
+|---|---|---|---|
+| Eye | 0.829 → **0.991** | 0.698 → **0.901**; normal eyes flagged 94 % → **6 %** | v5 detector + v5 MLP |
+| Tongue | **0.841** → 0.804 | 0.691 → **0.701** | v4 detector kept + v5 MLP |
+| Face | 0.139 → **0.672** | 0.213 → **0.778** | v5 detector + v5 MLP |
+
+- The face gain mainly reflects **fixing the labels**: scored on corrected labels, the
+  v4 face models were mostly wrong (e.g. dark spot 0.083 AP, because v4 had learned to
+  call dark spots "eczema").
+- Acne, vitiligo and butterfly rash are now trained (test AP 0.870 / 0.854 / 0.430);
+  only blackhead lacks data.
+- The tongue detector got worse when retrained on the deduplicated set (white coating
+  0.71 → 0.53, lichen planus 0.67 → 0.38, both small classes), so v4 stays in service.
+  Losing duplicates/augmentations cut the effective training data for rare classes.
+- Still open: no healthy **face** photos (the v5 face MLP alone fires dark circle on 78 %
+  of real faces, so the detector-confirmation rule stays), no tongue negatives, the
+  test split is small for some classes (scleral icterus n = 3), and these are still
+  image-level scores on curated photos, not clinical accuracy.
+
 ### 1.6 Per-modality scoring changed in v4.1
 v1–v3 used hand-set conditional probability tables (CPTs) and priors per modality —
 the "hand-built Bayesian priors" JBHI objected to. v4 classes no longer match those
@@ -75,9 +129,10 @@ State this change explicitly in the next paper.
 ## 2. Filling the zero-data classes
 
 Current inactive classes (kept in the schema so YOLO class ids stay aligned, but
-excluded from inference and coverage): face `acne`, `blackhead`, `vitiligo`,
-`butterfly_rash`; tongue `no_coating`, `purple_tongue`, `angular_stomatitis`,
-`median_rhomboid`. **Verify every licence before training on or redistributing data.**
+excluded from inference and coverage): face `blackhead`; tongue `no_coating`,
+`purple_tongue`, `angular_stomatitis`, `median_rhomboid`. (Acne, vitiligo and
+butterfly_rash were recovered in v4.2 from data already on disk — §1.7. The rows below
+for those classes now describe *better* data, not missing data.) **Verify every licence before training on or redistributing data.**
 
 | Class | Candidate source | Labels | Licence (as found) | Notes |
 |---|---|---|---|---|
@@ -96,8 +151,10 @@ Each is a one-line change in `facefuel/schema.py` plus a retrain.
 
 ### 2.3 Negatives (most important data change)
 Whatever else is added, add **no-condition images** for every modality and train the
-MLPs with all-zero label rows. `pipeline/05_extract_features.py --negatives DIR`
-now supports this. Sources: TCM-Tongue healthy tongues; healthy-skin sets above;
+MLPs with all-zero label rows. Put them in the dataset as background images (empty
+label files); `pipeline/05_extract_features.py` turns those into negatives, and YOLO
+uses them as background. The v5 eye set already includes 745 verified normal-eye photos
+(`pipeline/03b_build_clean_v5.py`). Further sources: TCM-Tongue healthy tongues; healthy-skin sets above;
 non-anaemic conjunctivas from the anaemia datasets in §4.2. A generic face dataset
 (e.g. FFHQ, CC BY-NC-SA 4.0) could serve as weak "presumed-healthy" face negatives,
 but should be described as such.
@@ -212,8 +269,8 @@ as the framework that extends it.
 ## 6. Suggested next-paper plan (ordered by evidence per hour)
 
 1. Run the eye module on Girija et al. and report AUC / ρ / calibration vs lab Hb, as external validation.
-2. Add negatives (TCM-Tongue healthy class, healthy skin, non-anaemic conjunctivas); retrain the MLPs; show the domain-shift probe before and after.
-3. Use leave-one-source-out evaluation and a proper held-out test split, with bootstrap CIs.
+2. ~~Add negatives and retrain~~ — **done for eye in v4.2** (normal eyes flagged 94 % → 6 %). Still needed for face (healthy faces) and tongue (TCM-Tongue healthy class).
+3. ~~Held-out test split~~ — **done in v4.2**. Still to add: leave-one-source-out evaluation and bootstrap CIs.
 4. Calibrate each modality, learn the PoE weights on whatever labelled outcome data exists, and ablate them against the hand-set weights.
 5. Add TCM-Tongue classes and retire the classes that have no data.
 6. Run the volunteer protocol (§4.3) as the clinical-evidence centrepiece.

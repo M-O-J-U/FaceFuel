@@ -2,9 +2,9 @@
 FaceFuel v4 — Stage 4: train the three YOLO11m detectors
 =========================================================
 Run (from anywhere):
-  python pipeline/04_train_yolo.py                 # face, tongue, eye
-  python pipeline/04_train_yolo.py --tongue-only   # or --face-only / --eye-only
-  python pipeline/04_train_yolo.py --validate      # re-validate the weights the server uses
+  python pipeline/04_train_yolo.py --data v5                 # face, tongue, eye on the clean v5 sets
+  python pipeline/04_train_yolo.py --data v5 --eye-only      # or --face-only / --tongue-only
+  python pipeline/04_train_yolo.py --validate --split test   # score the weights the server uses
 
 Output: training_runs/<name>/weights/best.pt
 `project` is passed as an ABSOLUTE path. Ultralytics nests any relative
@@ -29,25 +29,53 @@ DEVICE     = "0"
 EPOCHS     = 80
 PATIENCE   = 20
 IMG_SIZE   = 640
-WORKERS    = 4
-PRETRAINED = "yolo11m.pt"          # auto-downloaded by Ultralytics if absent
+WORKERS    = 1          # ~1 GB RAM per dataloader worker (val uses 2x); 16 GB machines need few
+_LOCAL_BASE = ROOT / "local" / "base_weights" / "yolo11m.pt"
+PRETRAINED = str(_LOCAL_BASE) if _LOCAL_BASE.exists() else "yolo11m.pt"   # else auto-downloaded
 PROJECT    = ROOT / "training_runs"
 
-RUNS = {   # modality: (data.yaml, run name, batch, weight key in facefuel.paths)
-    "face":   (ROOT / "facefuel_face_v4/data.yaml",   "face_v4",   24, "face_yolo"),
-    "tongue": (ROOT / "facefuel_tongue_v4/data.yaml", "tongue_v4", 24, "tongue_yolo"),
-    "eye":    (ROOT / "facefuel_eye_v4/data.yaml",    "eye_v2",    24, "eye_yolo"),
-}
+# v4 used 24; on a 12 GB card that fills VRAM and Windows silently spills into system
+# memory (~10× slower) or OOMs. 12 fits comfortably (~6 GB).
+BATCH = {"face": 12, "tongue": 12, "eye": 12}
+WEIGHT_KEY = {"face": "face_yolo", "tongue": "tongue_yolo", "eye": "eye_yolo"}
+
+
+def runs(data_version: str) -> dict:
+    """modality → (data.yaml, run name, batch, weight key in facefuel.paths)"""
+    return {m: (ROOT / f"facefuel_{m}_{data_version}/data.yaml", f"{m}_{data_version}",
+                BATCH[m], WEIGHT_KEY[m]) for m in BATCH}
 
 
 def best_path(name: str) -> Path:
     return PROJECT / name / "weights" / "best.pt"
 
 
-def train(data_yaml: Path, name: str, batch: int):
+def training_state(name: str) -> str:
+    """'none' (never started), 'partial' (interrupted — resumable), or 'done'.
+    Ultralytics strips the optimizer and sets epoch = -1 in last.pt when a run finishes."""
+    last = PROJECT / name / "weights" / "last.pt"
+    if not last.exists():
+        return "none"
+    import torch
+    try:
+        ck = torch.load(str(last), map_location="cpu", weights_only=False)
+    except Exception:
+        return "none"          # unreadable (e.g. power cut mid-write): start fresh
+    return "done" if ck.get("epoch", -1) == -1 else "partial"
+
+
+def train(data_yaml: Path, name: str, batch: int, fresh: bool = False):
     if not data_yaml.exists():
         print(f"  missing: {data_yaml}")
         return None
+    state = "none" if fresh else training_state(name)
+    if state == "done":
+        print(f"  {name}: already finished — skipping ({best_path(name)})")
+        return None
+    if state == "partial":
+        last = PROJECT / name / "weights" / "last.pt"
+        print(f"\n{'=' * 65}\n  RESUMING {name} from {last}\n{'=' * 65}\n")
+        return YOLO(str(last)).train(resume=True)
     print(f"\n{'=' * 65}\n  Training: {name}\n  data={data_yaml}  batch={batch}  epochs={EPOCHS}"
           f"\n  output: {best_path(name)}\n{'=' * 65}\n")
     t0 = time.time()
@@ -64,29 +92,41 @@ def train(data_yaml: Path, name: str, batch: int):
     return results
 
 
-def validate(weights: Path, data_yaml: Path, label: str):
-    print(f"\n[val] {label}  {weights}")
-    m = YOLO(str(weights)).val(data=str(data_yaml), device=DEVICE, imgsz=IMG_SIZE)
+def validate(weights: Path, data_yaml: Path, label: str, split: str = "val"):
+    print(f"\n[{split}] {label}  {weights}")
+    m = YOLO(str(weights)).val(data=str(data_yaml), device=DEVICE, imgsz=IMG_SIZE, split=split)
     print(f"  mAP50={m.box.map50:.3f}  mAP50-95={m.box.map:.3f}  P={m.box.mp:.3f}  R={m.box.mr:.3f}")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    for mod in RUNS:
+    for mod in BATCH:
         ap.add_argument(f"--{mod}-only", action="store_true")
+    ap.add_argument("--data", default="v5", help="dataset version suffix: facefuel_<modality>_<data>")
     ap.add_argument("--validate", action="store_true")
+    ap.add_argument("--weights", help="with --validate: score this file instead of the server's")
+    ap.add_argument("--split", default="val", choices=["val", "test"])
+    ap.add_argument("--fresh", action="store_true",
+                    help="start over even if an interrupted run exists (default: resume it)")
+    ap.add_argument("--state", action="store_true", help="print each run's state and exit")
     args = ap.parse_args()
+    RUNS = runs(args.data)
     chosen = [m for m in RUNS if getattr(args, f"{m}_only")] or list(RUNS)
 
     if args.validate:
         for mod in chosen:
             data, _, _, key = RUNS[mod]
-            validate(paths.resolve(key), data, mod)
+            validate(Path(args.weights) if args.weights else paths.resolve(key), data, mod, args.split)
+        sys.exit(0)
+
+    if args.state:
+        for mod in chosen:
+            print(f"{mod}: {training_state(RUNS[mod][1])}")
         sys.exit(0)
 
     for mod in chosen:
         data, name, batch, _ = RUNS[mod]
-        train(data, name, batch)
+        train(data, name, batch, fresh=args.fresh)
 
     print(f"\n{'=' * 65}  DONE")
     for mod in chosen:

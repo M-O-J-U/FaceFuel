@@ -30,8 +30,10 @@ EYE_CLASSES = [
     "pterygium", "conjunctivitis", "eyelid_drooping",
 ]
 
-# Zero training images were recovered for these (CLAUDE.md §3). Not functional.
-FACE_INACTIVE   = {"acne", "blackhead", "vitiligo", "butterfly_rash"}
+# No usable training data. v5 recovered acne / vitiligo / butterfly_rash (their v4
+# labels had been lost in a class-index shift, docs/RESEARCH_NOTES.md §1.6a), so only
+# blackhead remains inactive for face. Must match each MLP checkpoint's inactive_idx.
+FACE_INACTIVE   = {"blackhead"}
 TONGUE_INACTIVE = {"no_coating", "purple_tongue", "angular_stomatitis", "median_rhomboid"}
 EYE_INACTIVE    = set()
 

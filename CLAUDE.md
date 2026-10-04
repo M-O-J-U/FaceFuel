@@ -5,7 +5,8 @@ It describes what FaceFuel is, its current technical state, known issues, and th
 work that still needs doing. Treat file paths and numbers here as the
 source of truth over any older comments found inside individual scripts.
 
-> **State as of 2026-10-04 (v4.1 audit):** the inference layer was rebuilt as the
+> **State as of 2026-10-05 (v4.2):** v5 retraining done and adopted per modality (§3, §9).
+> **Earlier (v4.1 audit, 2026-10-04):** the inference layer was rebuilt as the
 > `facefuel/` package served by `server.py` (the old `server_v4.py`,
 > `step10_inference.py`, `Phase7_tongue_inference.py`, `eye_inference.py` are archived in
 > `legacy/`). Known Issues 1–5 below are resolved or mitigated — see §8 for what changed
@@ -76,67 +77,33 @@ grades detector-confirmed features only (`facefuel/evidence.py: REQUIRE_DETECTOR
 
 ---
 
-## 3. Current Model State (v4)
+## 3. Current Model State (v4.2, adopted 2026-10-05)
 
 Weight locations are resolved in ONE place, `facefuel/paths.py` (env var →
-`weights/<canonical name>` → the legacy paths listed below).
-`python scripts/collect_weights.py` copies them into `weights/`.
+`weights/<canonical name>` → training-output fallback). `python scripts/collect_weights.py`
+copies them into `weights/`. All numbers below are on the **held-out v5 test split**
+(images never in v4 training; `docs/model_comparison.md`). The v4 numbers previously in
+this file (eye 0.990, tongue 0.871, face 0.560, MLP F1 0.985/0.761/0.901) were inflated
+by train/val duplicates and, for face, by shifted labels — do not quote them.
 
-### Face — YOLO11m
-- **Weights:** `runs\detect\runs\detect\runs\face\face_yolo11m_v4\weights\best.pt`
-  (note the doubled `runs/detect/` prefix — a YOLO `project`/`name` config
-  bug from training; see Known Issues)
-- mAP50 = 0.560 overall. This number is misleading on its own — several
-  classes have very small validation splits (e.g. acne had 2 val images),
-  dragging the average down while visually strong classes like eczema
-  (0.973), rosacea (0.817), dark_circle (0.773) are genuinely solid.
-- **Classes with real training data (10 configured, 6 actually trained):**
-  dark_circle, wrinkle, redness, dark_spot, rosacea, eczema
-- **Classes with ZERO recovered training images** (present in the schema,
-  not functional): acne, blackhead, vitiligo, butterfly_rash. The merge
-  pipeline could not locate usable source images for these despite being
-  in several candidate datasets. This is a known, unresolved gap.
-- **Severity MLP:** `facefuel_models\face_severity_mlp_v4.pt`, F1 = 0.901
-  across the 6 active classes (dark_circle 0.969, dark_spot 0.945,
-  wrinkle 0.917, eczema 0.896, rosacea 0.834, redness 0.814).
+| Modality | Detector in use | test mAP50 | Severity MLP in use | test mean F1 | Inactive classes |
+|---|---|---|---|---|---|
+| Eye | `training_runs/eye_v5` (v5) | 0.991 | `eye_severity_mlp_v5.pt` | 0.901 | none |
+| Tongue | `runs/detect/training_runs/tongue_v4` (v4 kept — v5 scored 0.804) | 0.841 | `tongue_severity_mlp_v5.pt` | 0.701 | no_coating, purple_tongue, angular_stomatitis, median_rhomboid |
+| Face | `training_runs/face_v5` (v5) | 0.672 | `face_severity_mlp_v5.pt` | 0.778 | blackhead |
 
-### Tongue — YOLO11m
-- **Weights:** `runs\detect\training_runs\tongue_v4\weights\best.pt`
-- mAP50 = 0.871 (best tongue result across all versions).
-- **18 classes configured, 14 have data:** tongue_body, white_coating,
-  yellow_coating, thick_coating, red_tongue, pale_tongue, fissured,
-  geographic, smooth_glossy, crenated, oral_ulcer, lichen_planus,
-  leukoplakia, hairy_leukoplakia.
-- **Zero-data classes:** no_coating, purple_tongue, angular_stomatitis,
-  median_rhomboid_glossitis. The Ataturk University clinical dataset
-  (contact: omiloglu@hotmail.com, paper DOI 10.1186/s12880-024-01234-3,
-  623 patients) was identified as the best source for
-  median_rhomboid_glossitis specifically but was never obtained — still
-  worth pursuing.
-- **Severity MLP:** `facefuel_models\tongue_severity_mlp_v4.pt`, F1 = 0.761.
-  Strong: leukoplakia 0.902, yellow_coating 0.911, oral_ulcer 0.898.
-  Weak: lichen_planus 0.250 (only ~82 samples), fissured 0.558.
-
-### Eye — YOLO11m
-- **Weights:** `runs\detect\training_runs\eye_v2\weights\best.pt`
-- mAP50 = 0.990 (0.993 best epoch per results.csv) — the strongest model in the entire project, across all
-  versions and modalities.
-- **6 classes, all functional:** conjunctival_pallor, scleral_icterus,
-  xanthelasma, pterygium, conjunctivitis, eyelid_drooping.
-  (`pinguecula` and `dry_eye` were planned but dropped — zero usable
-  training images were ever found; the one large "Mendeley eye disease"
-  dataset downloaded for this turned out to be fundus/retinal photography,
-  not visible-light selfie images, and was correctly excluded during
-  merging except for its small Pterygium subset.)
-- **Severity MLP:** `facefuel_models\eye_severity_mlp_v4.pt`, F1 = 0.985,
-  every class ≥ 0.943.
-- `scleral_icterus` has a three-layer false-positive guard: a raised
-  per-class confidence threshold (0.65 vs 0.30 default), a LAB
-  colour gate (mean B channel > 145 and L channel > 140, i.e. genuinely
-  yellow and not just dark/shadowed), and a rule that the severity MLP
-  alone can never report it — YOLO must confirm. This was necessary
-  because early eye models fired scleral_icterus on every image
-  including clearly healthy white sclera.
+- **Eye:** trained with 745 normal-eye negatives; normal eyes flagged by the MLP 6 % (v4: 94 %).
+  scleral_icterus keeps its three-layer guard (0.65 YOLO threshold, LAB gate B>145 & L>140,
+  YOLO confirmation required). Test n is small for icterus (3), pallor (11), xanthelasma (14).
+- **Tongue:** per-class detector AP: weak on crenated (0.37), white_coating (0.71),
+  lichen_planus (0.67). MLP weak on white_coating, pale_tongue (n=3), lichen_planus, crenated.
+  The Ataturk University cohort (omiloglu@hotmail.com, DOI 10.1186/s12880-024-01234-3) is
+  still the best source for median_rhomboid; TCM-Tongue (2025) for purple/peeled + healthy.
+- **Face:** acne / vitiligo / butterfly_rash recovered by fixing the v4 label shift (test AP
+  0.870 / 0.854 / 0.430). Weak: wrinkle detector (0.248 AP), butterfly_rash. No healthy-face
+  negatives yet → MLP alone fires dark_circle on 78 % of real faces → detector confirmation
+  (`evidence.REQUIRE_DETECTOR`) must stay on.
+- v4 weights are untouched (`runs/…`, `facefuel_models/*_v4.pt`, `weights/*_v4.pt`) for rollback.
 
 ### Deficiency framework — 22 dimensions
 ```
@@ -147,13 +114,9 @@ liver_stress, gut_dysbiosis, hypothyroid, folate_deficiency,
 cholesterol_imbalance, riboflavin_deficiency, autoimmune_risk,
 eye_inflammation, copper_deficiency, skin_inflammation, oral_health_risk
 ```
-Face covers the first 11 (general dimensions); tongue extends coverage
-to 16 (adds liver_stress, gut_dysbiosis, hypothyroid, folate_deficiency,
-cholesterol_imbalance); eye covers all 22, contributing the only evidence
-for several autoimmune/inflammation-adjacent categories. See
-`ALL_DEFS`, `FACE_DEFS`, `TONGUE_DEFS`, `EYE_DEFS` and the
-`*_FEAT_DEF` mapping dicts in `server_v4.py` for the exact mapping
-from detected visual feature → deficiency category.
+Coverage per modality is derived from the ACTIVE classes' mappings in
+`facefuel/schema.py` (`*_FEAT_DEF`, `coverage()`); `GET /api/info` lists it. With all three
+modalities, only vitamin_d and riboflavin are not assessable.
 
 ---
 
@@ -409,3 +372,58 @@ Open decisions for the author: GitHub history cleanup (the public repo contains 
 photos — see docs/PUBLISH_CHECKLIST.md), code licence, weight redistribution, and
 retraining with negatives and a held-out test split.
 
+
+---
+
+## 9. v5 retraining — COMPLETE (2026-10-04 14:17 → 2026-10-05 04:00)
+
+**Status: done.** Chain completed 04:00; models adopted per §3; results in
+`docs/model_comparison.md`. Nothing to resume. The launcher/guardian scripts in `local/`
+remain as a template for future long runs. History below.
+
+**Why:** the v4 audit found (a) the face labels were class-shifted during the v4 merge
+and the eczema/vitiligo/butterfly_rash/rosacea labels were lost, and (b) 32–56 % of
+validation images had exact copies in training (eye mAP 0.993 → 0.829 on a fair test).
+Details: docs/RESEARCH_NOTES.md §1.6a–b. The author approved retraining "if it will be
+better for the project".
+
+**Done:** clean datasets `facefuel_{eye,tongue,face}_v5/` built by
+`pipeline/03b_build_clean_v5.py` (hard links; deduplicated incl. flips/rotations;
+face relabelled by source hash; 745 normal-eye negatives; `test` split = v4-val images
+never seen in v4 training, so old and new models are compared fairly).
+
+**Log:** 2026-10-04 ~21:50 the PC lost power mid face-training (Kernel-Power 41,
+bugcheck 0 — power cut, not a crash). Checkpoints were intact; relaunched 23:10 and face
+resumed from epoch 38 (≈1 epoch lost). Second power cut 2026-10-05 ~01:02
+(reboot 02:01); relaunched 02:06, face resumed at epoch 60. After any reboot: relaunch launcher + guardian
+(Start-Process commands as below) — they skip finished steps.
+
+**Currently running (2026-10-04 16:14; relaunched 23:10):** a DETACHED launcher (`local/wait_then_resume.sh`,
+started via PowerShell Start-Process, pid in `local/v5_launcher.pid`) waits for the
+tongue YOLO run to finish, then runs `resume_v5_chain.sh` with up to 3 automatic retries
+and keeps the PC awake. It runs outside Claude Code, so Claude Code's low-memory reaper
+can't kill it and closing Claude Code doesn't stop it. Check `local/v5_chain.log`.
+
+**Resume after any interruption** (shutdown, reboot, killed job):
+```bash
+bash local/resume_v5_chain.sh      # skips finished steps; resumes a half-trained YOLO from last.pt
+python pipeline/04_train_yolo.py --data v5 --state   # shows none / partial / done per modality
+```
+Progress log: `local/v5_chain.log`; per-step logs `local/v5_<step>.log`.
+Order: eye → tongue → face (YOLO → features → MLP each) → `scripts/compare_models.py`
+→ `docs/model_comparison.md`. Settings: batch 12, workers 1 (16 GB RAM machine — more
+workers got the job killed for low memory; batch 24 overflowed 12 GB VRAM).
+
+**After the chain completes** (author pre-approved on 2026-10-05: do all of this, including the GitHub push, without asking):
+1. Read `docs/model_comparison.md`. Adopt a new model ONLY if it beats the old one on
+   the v5 test split (detector mAP50; MLP mean F1) without a big regression on any
+   class with ≥10 test examples. Decide per modality.
+2. For adopted modalities: copy `training_runs/<m>_v5/weights/best.pt` and
+   `facefuel_models/<m>_severity_mlp_v5.pt` into `weights/` and point
+   `facefuel/paths.py` canonical names at them; update `*_INACTIVE` in
+   `facefuel/schema.py` from the new checkpoint's `inactive_idx` (face v5: only
+   `blackhead` should be inactive — acne/vitiligo/butterfly_rash become active).
+3. Run `python -m pytest tests -q` and the end-to-end check; update README results,
+   PROJECT_SUMMARY, RESEARCH_NOTES and §3 of this file with the v5 test numbers
+   (state clearly they replace the leaked v4 numbers).
+4. Commit and push to GitHub (author approved replacing repo contents; no photos).

@@ -26,11 +26,16 @@ def test_feature_maps_only_use_known_deficiencies():
 
 
 def test_inactive_classes_do_not_create_coverage():
-    # vitiligo / butterfly_rash (zero training data) are the only face routes to
-    # autoimmune_risk and copper — so face must not claim to cover them.
-    assert "autoimmune_risk" not in schema.coverage("face")
-    assert "copper_deficiency" not in schema.coverage("face")
+    # angular_stomatitis (no training data) is the only tongue route to riboflavin,
+    # so tongue must not claim to cover it; nothing active maps to vitamin D.
     assert "riboflavin_deficiency" not in schema.coverage("tongue")
+    assert "vitamin_d_deficiency" not in set().union(*(schema.coverage(m) for m in schema.CLASSES))
+
+
+def test_v5_face_classes_are_active():
+    # v5 recovered acne / vitiligo / butterfly_rash; only blackhead lacks data
+    assert schema.FACE_INACTIVE == {"blackhead"}
+    assert {"hormonal_imbalance", "autoimmune_risk"} <= schema.coverage("face")
 
 
 def test_tongue_only_categories_really_are_tongue_only():

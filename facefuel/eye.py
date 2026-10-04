@@ -1,5 +1,6 @@
 """
-Eye modality (v4 MLP, eye_v2 YOLO — mAP50 0.993, MLP F1 0.985).
+Eye modality (v5 YOLO11m + v5 MLP; held-out test: detector mAP50 0.991,
+MLP mean F1 0.901, 6% of normal eyes flagged — docs/model_comparison.md).
 
 Runs on the eye band of the RAW aligned face (no extra photo needed).
 

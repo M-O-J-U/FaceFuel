@@ -409,7 +409,7 @@ footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wr
         <li><h3>Fuse</h3><p>Signs map to wellness areas; face, tongue and eye evidence is combined with weights of 0.40, 0.35 and 0.25.</p></li>
       </ol>
       <div class="cover" id="cover">
-        <div style="--c:var(--honey)"><h3>Face</h3><p id="cov-face">Dark circles, wrinkles, redness, dark spots, rosacea and eczema, plus skin and lip pallor.</p></div>
+        <div style="--c:var(--honey)"><h3>Face</h3><p id="cov-face">Dark circles, fine lines, redness, dark spots, acne, rosacea, eczema, vitiligo and malar-rash-like redness, plus skin and lip pallor.</p></div>
         <div style="--c:var(--iris)"><h3>Eyes</h3><p id="cov-eye">Conjunctival pallor, yellowed sclera, xanthelasma, pterygium, conjunctivitis and a drooping eyelid.</p></div>
         <div style="--c:var(--rasp)"><h3>Tongue</h3><p id="cov-tongue">Coatings, colour, fissures, geographic and smooth patterns, scalloped edges, ulcers and white patches.</p></div>
       </div>
@@ -445,6 +445,7 @@ footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wr
   const WEIGHTS = { face: 0.40, tongue: 0.35, eye: 0.25 };
   const FEATURE_LABELS = {
     dark_circle: "Dark circles", wrinkle: "Fine lines", redness: "Redness", dark_spot: "Dark spots",
+    acne: "Acne", vitiligo: "Loss of skin pigment", butterfly_rash: "Butterfly-shaped facial rash",
     rosacea: "Rosacea-like redness", eczema: "Eczema-like patches", pallor: "Pale skin tone", lip_pallor: "Pale lips",
     conjunctival_pallor: "Pale inner eyelid", scleral_icterus: "Yellowed whites of the eyes", xanthelasma: "Xanthelasma",
     pterygium: "Pterygium", conjunctivitis: "Eye redness", eyelid_drooping: "Drooping eyelid",

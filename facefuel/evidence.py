@@ -13,9 +13,10 @@ MLP_PRESENT = 0.35
 YOLO_SCALE  = 0.85     # a YOLO confidence counts slightly less than a severity
 
 # The severity MLPs grade features the DETECTOR found; they do not report on their
-# own. Reason: the v4 MLPs were trained only on images containing at least one
-# labelled condition (no healthy negatives), so on real selfies they saturate —
-# e.g. dark_circle ≈ 1.0 on nearly every face (scripts/domain_shift_probe.py).
+# own. Reason: the v4 MLPs had no healthy negatives and saturated on real selfies
+# (scripts/domain_shift_probe.py). v5 added normal-eye negatives (eye MLP now flags
+# 6 % of normal eyes vs 94 %), but there are still no healthy FACE photos, and the
+# v5 face MLP alone fires dark_circle on 78 % of real faces (docs/model_comparison.md).
 # MLP-only signals are returned separately as unconfirmed and are not evidence.
 REQUIRE_DETECTOR = True
 
