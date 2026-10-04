@@ -1,0 +1,9 @@
+# Only facefuel/, static/, server.py, requirements.txt and weights/ are needed.
+*
+!facefuel/
+!static/
+!server.py
+!requirements.txt
+!weights/
+**/__pycache__
+weights/MANIFEST.txt

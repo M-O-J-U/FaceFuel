@@ -1,0 +1,24 @@
+# FaceFuel runtime dependencies.
+# Verified together on Python 3.14 / Windows / CUDA 12.8 (RTX 4070 Super), October 2026:
+#   torch 2.11.0, torchvision 0.26.0, ultralytics 8.4.60, transformers 5.12.1,
+#   mediapipe 0.10.35, fastapi 0.136.3, uvicorn 0.48.0, numpy 2.4.4, pillow 12.2.0
+#
+# Install PyTorch FIRST with the build matching your GPU/driver, e.g.
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+# (CPU-only also works, ~5–10× slower:  --index-url https://download.pytorch.org/whl/cpu)
+# then:
+#   pip install -r requirements.txt
+
+torch>=2.5
+torchvision>=0.20
+ultralytics>=8.3,<9
+transformers>=4.45
+mediapipe>=0.10.14
+opencv-python>=4.9
+numpy>=1.26
+pillow>=11.3          # AVIF decoding for phone photos
+pyyaml>=6.0
+
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9

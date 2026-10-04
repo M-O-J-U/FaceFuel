@@ -1,0 +1,1 @@
+FaceFuel combines facial skin analysis and tongue examination in a single probabilistic framework for non-invasive nutritional health screening. A product-of-experts fusion of independent face and tongue posteriors produces estimates over 15 deficiency categories — four of which are tongue-exclusive and undetectable from skin alone — in under 120 ms.

@@ -1,0 +1,51 @@
+# ── Datasets: many GB, third-party licences — never commit ──────────────────
+facefuel_datasets/
+facefuel_datasets_v4/
+tongue_datasets/
+tongue_datasets_v4/
+eye_datasets/
+eye_datasets_v4/
+facefuel_face_v4/
+facefuel_tongue_v4/
+facefuel_eye_v4/
+facefuel_features/
+
+# ── Model weights & training outputs: distribute via GitHub Releases ────────
+runs/
+training_runs/
+weights/
+facefuel_models/
+*.pt
+*.pth
+*.onnx
+*.task
+*.npz
+
+# ── Local-only material (personal photos, promo video, scans, backups) ──────
+local/
+facefuel_outputs/
+*.bak
+*.mp4
+*.mov
+facefuel_structure.txt
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# ── Submission materials kept private ───────────────────────────────────────
+paper_results/**/cover letter.txt
+paper_results/**/pp_statement.txt
+paper_results/**/*.zip
+# paper PDFs are published on Zenodo and may contain sample photos
+paper_results/**/*.pdf
+
+# ── Tooling ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vscode/
+.idea/
+.playwright-mcp/
+.env
+.venv/
+venv/
