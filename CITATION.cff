@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: "If you use FaceFuel in your research, please cite the papers below."
+title: "FaceFuel: tri-modal visual wellness screening from face, eye and tongue photos"
+type: software
+version: 4.2.0
+date-released: 2026-10-05
+license-url: "https://polyformproject.org/licenses/strict/1.0.0"
+repository-code: "https://github.com/M-O-J-U/FaceFuel"
+abstract: >-
+  Research prototype that combines face, eye and tongue computer-vision pipelines
+  (YOLO11m detection, DINOv2 region features, Monte Carlo dropout severity models)
+  with product-of-experts fusion to point to nutrition and lifestyle areas worth a
+  closer look. A wellness-awareness tool, not a medical device.
+keywords:
+  - computer vision
+  - multimodal fusion
+  - digital health
+  - tongue diagnosis
+  - nutritional screening
+authors:
+  - family-names: Muhammad
+    given-names: Abdul Moiz
+    orcid: "https://orcid.org/0009-0006-2795-5271"
+    affiliation: "COMSATS University Islamabad, Wah Cantt, Pakistan"
+preferred-citation:
+  type: generic
+  title: "TriModal: Face, Tongue, and Eye as Complementary Visual Channels for Non-Invasive Nutritional and Lifestyle Deficiency Screening"
+  authors:
+    - family-names: Muhammad
+      given-names: Abdul Moiz
+      orcid: "https://orcid.org/0009-0006-2795-5271"
+  doi: 10.5281/zenodo.19468059
+  year: 2026
+  publisher:
+    name: Zenodo
+references:
+  - type: generic
+    title: "FaceFuel: A Multi-Stage Heterogeneous Fusion Pipeline for Non-Invasive Nutritional Deficiency Screening from Facial Imagery"
+    authors:
+      - family-names: Muhammad
+        given-names: Abdul Moiz
+    doi: 10.5281/zenodo.19394708
+    year: 2026
+    publisher:
+      name: Zenodo
+  - type: generic
+    title: "Multi-Modal Visual Health Assessment Through Product-of-Experts Posterior Fusion of Facial and Lingual Biomarkers"
+    authors:
+      - family-names: Muhammad
+        given-names: Abdul Moiz
+    doi: 10.5281/zenodo.19411317
+    year: 2026
+    publisher:
+      name: Zenodo
