@@ -33,9 +33,8 @@ Whichever you choose, the working tree is already cleaned: those files now live 
 | `pipeline/`, `scripts/` | Reproducible training pipeline and tools |
 | `tests/` | Regression tests |
 | `requirements*.txt`, `Dockerfile`, `.dockerignore`, `.gitignore` | Setup and deployment |
-| `README.md`, `CLAUDE.md`, `docs/*.md` | Documentation (project summary, research notes, deployment, this checklist) |
+| `README.md`, `docs/*.md` | Documentation (project summary, research notes, deployment, this checklist) |
 | `docs/figures/*.png` | Pipeline, fusion, eye and tongue diagrams, plus the UI screenshot (contains no faces) |
-| `paper_results/paper */*.tex, *.bib, *.png`, `paper_results/generators/` | Paper sources and diagrams. PDFs are excluded (they are public on Zenodo and may contain sample photos) |
 | `legacy/` | v1–v3 code, kept so Papers 1–3 remain reproducible; the server does not use it |
 
 ## Stays local (git-ignored)
@@ -46,7 +45,7 @@ Whichever you choose, the working tree is already cleaned: those files now live 
 | `facefuel_{face,tongue,eye}_v4/`, `facefuel_features/` | GB | Derived from the above |
 | `runs/`, `training_runs/`, `facefuel_models/`, `weights/`, `*.pt`, `*.task` | ~300 MB | Distribute the 7 inference files as a **Release asset** instead (below) |
 | `local/` | ~250 MB | Personal photos, test photos, promo video (140 MB — over GitHub's 100 MB file limit), `facefuel_structure.txt` scan dump, `.bak` backups, base YOLO weights (re-downloadable), old frontend copies, logos/screenshots in `facefuel extras/` |
-| `paper_results/**/cover letter.txt`, `pp_statement.txt`, `*.zip` | small | Journal-submission correspondence and duplicate archives |
+| `CLAUDE.md`, `paper_results/` | small | Kept local by the author's choice: project memory for Claude Code, and the papers' LaTeX sources (the papers themselves are public on Zenodo) |
 | `__pycache__/`, `.vscode/`, `.playwright-mcp/` | — | Tooling |
 
 ## Model weights as a GitHub Release

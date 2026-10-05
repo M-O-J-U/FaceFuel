@@ -1,8 +1,8 @@
 """
 Domain-shift probe for the v4 severity MLPs.
 
-1. In-domain: for each modality, mean MLP output on a sample of its own
-   validation images, split by whether the class is present in the label —
+1. In-domain: for each modality, mean MLP output on a sample of its held-out
+   v5 test images, split by whether the class is present in the label —
    this is the setting the reported F1 scores come from.
 2. Tongue localisation rate on tongue validation images (tongue_body found?).
 3. Out-of-domain: MLP output and detector hits on a folder of selfies.
@@ -39,7 +39,7 @@ def read(p):
 
 
 def in_domain(mod, models, n, rng, lines):
-    lbl_dir = ROOT / f"facefuel_{mod}_v4" / "labels" / "val"
+    lbl_dir = ROOT / f"facefuel_{mod}_v5" / "labels" / "test"
     files = sorted(lbl_dir.glob("*.txt"))
     if not files:
         lines.append(f"\n_{mod}: no validation set at {lbl_dir}_\n")
@@ -47,7 +47,7 @@ def in_domain(mod, models, n, rng, lines):
     rows = []
     for lp in rng.sample(files, min(n, len(files))):
         ids = {int(l.split()[0]) for l in lp.read_text().splitlines() if l.strip()}
-        ip = next(iter(sorted((lbl_dir.parent.parent / "images" / "val").glob(lp.stem + ".*"))), None)
+        ip = next(iter(sorted((lbl_dir.parent.parent / "images" / "test").glob(lp.stem + ".*"))), None)
         img = read(ip) if ip else None
         if img is None:
             continue
@@ -68,7 +68,7 @@ def in_domain(mod, models, n, rng, lines):
 
 
 def tongue_localisation(models, n, rng, lines):
-    imgs = sorted((ROOT / "facefuel_tongue_v4" / "images" / "val").glob("*"))
+    imgs = sorted((ROOT / "facefuel_tongue_v5" / "images" / "test").glob("*"))
     if not imgs:
         return
     hits = 0

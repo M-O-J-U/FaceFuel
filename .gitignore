@@ -50,3 +50,7 @@ __pycache__/
 .env
 .venv/
 venv/
+
+# Kept local only (author removed them from the public repo)
+CLAUDE.md
+paper_results/

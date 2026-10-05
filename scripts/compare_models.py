@@ -30,12 +30,12 @@ from facefuel.models import SeverityMLP, default_device
 from mlp_metrics import negatives_flag_rate, per_class
 
 PAIRS = {   # modality: (old detector, new detector, old MLP, new MLP)
-    "face":   ("weights/face_yolo11m_v4.pt",   "training_runs/face_v5/weights/best.pt",
-               "weights/face_severity_mlp_v4.pt", "facefuel_models/face_severity_mlp_v5.pt"),
-    "tongue": ("weights/tongue_yolo11m_v4.pt", "training_runs/tongue_v5/weights/best.pt",
-               "weights/tongue_severity_mlp_v4.pt", "facefuel_models/tongue_severity_mlp_v5.pt"),
-    "eye":    ("weights/eye_yolo11m_v2.pt",    "training_runs/eye_v5/weights/best.pt",
-               "weights/eye_severity_mlp_v4.pt", "facefuel_models/eye_severity_mlp_v5.pt"),
+    "face":   ("runs/detect/runs/detect/runs/face/face_yolo11m_v4/weights/best.pt", "training_runs/face_v5/weights/best.pt",
+               "facefuel_models/face_severity_mlp_v4.pt", "facefuel_models/face_severity_mlp_v5.pt"),
+    "tongue": ("runs/detect/training_runs/tongue_v4/weights/best.pt", "training_runs/tongue_v5/weights/best.pt",
+               "facefuel_models/tongue_severity_mlp_v4.pt", "facefuel_models/tongue_severity_mlp_v5.pt"),
+    "eye":    ("runs/detect/training_runs/eye_v2/weights/best.pt", "training_runs/eye_v5/weights/best.pt",
+               "facefuel_models/eye_severity_mlp_v4.pt", "facefuel_models/eye_severity_mlp_v5.pt"),
 }
 
 
@@ -92,6 +92,13 @@ def selfie_rates(mod, paths_, folder, device):
 
 def compare(mod, selfies, device, lines):
     old_det, new_det, old_mlp, new_mlp = (ROOT / p for p in PAIRS[mod])
+    # The superseded v4 models were deleted after v4.2 was adopted; the recorded
+    # old-vs-new results live in docs/model_comparison.md. Re-running now scores the
+    # current models only (old = new) unless the old files are restored.
+    if not old_det.exists():
+        old_det = new_det
+    if not old_mlp.exists():
+        old_mlp = new_mlp
     data_yaml = ROOT / f"facefuel_{mod}_v5" / "data.yaml"
     lines.append(f"\n## {mod}\n")
     if new_det.exists():

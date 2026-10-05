@@ -176,7 +176,6 @@ pipeline/                training pipeline, run in order from the repo root
 scripts/                 collect_weights.py, compare_models.py, domain_shift_probe.py, scan_project.py
 tests/                   pytest — fusion/provenance (no GPU) + API smoke tests (need weights)
 docs/                    PROJECT_SUMMARY, RESEARCH_NOTES, DEPLOYMENT, PUBLISH_CHECKLIST, figures
-paper_results/           LaTeX sources and figures for the three papers
 legacy/                  v1–v3 code kept for reproducibility of Papers 1–3 (not used by the server)
 ```
 
@@ -216,7 +215,7 @@ The research plan to address these is in [docs/RESEARCH_NOTES.md](docs/RESEARCH_
 **[PolyForm Strict 1.0.0](LICENSE)**: you may use this software for personal,
 research and other noncommercial purposes only. You may **not** use it commercially,
 redistribute it, or publish modified or derived versions. **Commercial licensing is
-available.** Contact mojuaries111@gmail.com. The papers (and their sources in `paper_results/`) are published on Zenodo
+available.** Contact mojuaries111@gmail.com. The papers are published on Zenodo
 under CC BY-NC-ND 4.0. Trained weights are derived from third-party datasets with their
 own licences.
 
