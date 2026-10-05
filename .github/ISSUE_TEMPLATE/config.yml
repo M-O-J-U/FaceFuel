@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/M-O-J-U/FaceFuel/security/policy
+    about: Please report security issues privately — see SECURITY.md.
+  - name: Research / collaboration
+    url: https://doi.org/10.5281/zenodo.19468059
+    about: Questions about the methods are best answered by the papers on Zenodo.
