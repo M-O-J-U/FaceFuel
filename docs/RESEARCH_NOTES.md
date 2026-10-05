@@ -124,6 +124,39 @@ invented numbers (a mapping table instead of 11×11 + 11×15 probability tables 
 priors), and a modality with no findings now reports nothing instead of its prior.
 State this change explicitly in the next paper.
 
+### 1.8 Extra held-out experiments for the revised papers (2026-10-05)
+`scripts/paper_experiments.py` (outputs in `paper_results/revision/results/`, kept local)
+ran everything on the v5 test split. Findings worth knowing beyond the papers:
+- **Seed variance.** Five-seed severity-MLP mean F1: face 0.759 ± 0.012, tongue
+  0.700 ± 0.021, eye 0.871 ± 0.024. The shipped checkpoints (0.778 / 0.701 / 0.901) sit at
+  the upper end of these ranges, so quote seed means.
+- **Region embedding gives no measurable benefit on the current data.** A single
+  whole-image DINOv2 CLS token does as well as the region embedding: face 0.773 vs 0.759,
+  tongue 0.690 vs 0.700, eye 0.869 vs 0.871. The face leave-one-region-out changes stay
+  within seed noise. This is probably because most face images are skin close-ups, not
+  aligned selfies. The papers' first-edition "+0.149 from regions" claim is withdrawn.
+- **Linear probe.** It matches the MLP on the eye (0.897) but is weaker on face (0.704) and
+  tongue (0.657).
+- **Detector vs MLP vs both (image level).** Face: MLP 0.778 > detector 0.722 > AND 0.705.
+  Tongue: detector 0.708 > MLP 0.692 > AND 0.663. Eye: AND 0.939 is best.
+- **Calibration.** All MLPs are over-confident. Temperatures fitted on val: face 4.58,
+  tongue 3.99, eye 2.32. Pooled ECE drops to 0.016 / 0.013 / 0.009. The deployed
+  threshold 0.35 is for raw outputs, so re-choose it if scaling is ever applied.
+- **MC-dropout spread** detects wrong decisions with AUROC 0.92–0.94, far better than
+  distance from the threshold.
+- **Eye negatives ablation** (5 seeds). Without the 527 normal-eye training images,
+  90.6 % of normal test eyes are flagged; with them, 6.7 %. Mean F1 also rises,
+  0.713 → 0.871.
+- **Whole-image labels.** Every test box is whole-image for acne, vitiligo, butterfly
+  rash, oral ulcer, leukoplakia, lichen planus, pterygium, conjunctivitis and eyelid
+  drooping. For these, detector AP is image-level recognition.
+- **Unreachable dimensions.** `vitamin_d_deficiency` has no feature mapped to it at all,
+  and `riboflavin_deficiency` only via the inactive `angular_stomatitis`, so 20 of the 22
+  dimensions are reachable. Reports already mark the other two `not_assessed`. Either find
+  evidence for them or say "20 assessable" in user-facing text.
+- **Fusion weight sensitivity** (random triples, a rule property only). Within ±0.05 of
+  0.40/0.35/0.25, top-1 is unchanged in ≥ 80 % of trials and the top-3 set in ≥ 61 %.
+
 ---
 
 ## 2. Filling the zero-data classes
